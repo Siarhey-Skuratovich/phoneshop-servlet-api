@@ -7,14 +7,17 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.any;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ProductListPageServletTest {
@@ -24,11 +27,14 @@ public class ProductListPageServletTest {
     private HttpServletResponse response;
     @Mock
     private RequestDispatcher requestDispatcher;
+    @Mock
+    private ServletConfig config;
 
     private ProductListPageServlet servlet = new ProductListPageServlet();
 
     @Before
-    public void setup(){
+    public void setup() throws ServletException {
+        servlet.init(config);
         when(request.getRequestDispatcher(anyString())).thenReturn(requestDispatcher);
     }
 
@@ -36,6 +42,8 @@ public class ProductListPageServletTest {
     public void testDoGet() throws ServletException, IOException {
         servlet.doGet(request, response);
 
+        verify(request).setAttribute(eq("products"), any());
+        verify(request).getRequestDispatcher(eq("/WEB-INF/pages/productList.jsp"));
         verify(requestDispatcher).forward(request, response);
     }
 }
