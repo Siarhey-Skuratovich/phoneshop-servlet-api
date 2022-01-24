@@ -30,7 +30,7 @@ public class ProductListPageServletTest {
     @Mock
     private ServletConfig config;
 
-    private ProductListPageServlet servlet = new ProductListPageServlet();
+    private final ProductListPageServlet servlet = new ProductListPageServlet();
 
     @Before
     public void setup() throws ServletException {
