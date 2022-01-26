@@ -33,13 +33,20 @@ public class ArrayListProductDao implements ProductDao {
   }
 
   @Override
-  public List<Product> findProducts() {
+  public List<Product> findProducts(String query) {
     lock.readLock().lock();
     try {
-      return products.stream()
+      List<Product> productList = products;
+
+      if (query != null && !query.isEmpty()) {
+        productList = getFilteredAndSortedByQueryList(query, productList);
+      }
+
+      return productList.stream()
               .filter(product -> product.getPrice() != null)
               .filter(product -> product.getStock() > 0)
               .collect(Collectors.toList());
+
     } finally {
       lock.readLock().unlock();
     }
@@ -73,6 +80,27 @@ public class ArrayListProductDao implements ProductDao {
     } finally {
       lock.writeLock().unlock();
     }
+  }
+
+  private List<Product> getFilteredAndSortedByQueryList(String query, List<Product> productList) {
+    String[] keyWords = query.split(" ");
+    return productList.stream()
+            .filter(product -> Arrays.stream(keyWords)
+                    .anyMatch(keyWord -> product.getDescription().contains(keyWord)))
+            .sorted((product1, product2) -> {
+              int matchCountOfProduct1 = 0;
+              int matchCountOfProduct2 = 0;
+              for (String keyWord : keyWords) {
+                if (product1.getDescription().contains(keyWord)) {
+                  matchCountOfProduct1++;
+                }
+                if (product2.getDescription().contains(keyWord)) {
+                  matchCountOfProduct2++;
+                }
+              }
+              return Integer.compare(matchCountOfProduct2, matchCountOfProduct1);
+            })
+            .collect(Collectors.toList());
   }
 
   private void saveSampleProducts() {
