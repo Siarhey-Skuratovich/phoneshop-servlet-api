@@ -7,6 +7,7 @@ import org.junit.Test;
 
 import java.math.BigDecimal;
 import java.util.Currency;
+import java.util.List;
 import java.util.Optional;
 
 public class ArrayListProductDaoTest {
@@ -19,7 +20,8 @@ public class ArrayListProductDaoTest {
 
   @Test
   public void testFindProductsNoResults() {
-    assertFalse(productDao.findProducts().isEmpty());
+    assertFalse(productDao.findProducts(null).isEmpty());
+    assertFalse(productDao.findProducts("").isEmpty());
   }
 
   @Test
@@ -30,7 +32,7 @@ public class ArrayListProductDaoTest {
   @Test
   public void checkIfTheProductIsDeleted() {
     productDao.delete(3L);
-    assertFalse(productDao.getProduct(3L).isPresent());;
+    assertFalse(productDao.getProduct(3L).isPresent());
   }
 
   @Test
@@ -54,14 +56,29 @@ public class ArrayListProductDaoTest {
 
   @Test
   public void testFindProductsIfStockIsZero() {
-    assertTrue(productDao.findProducts().stream().allMatch(product -> product.getStock() > 0));
+    assertTrue(productDao.findProducts(null).stream().allMatch(product -> product.getStock() > 0));
   }
 
   @Test
   public void testFindProductsIfPriceIsNull() {
-    int oldSize = productDao.findProducts().size();
+    int oldSize = productDao.findProducts(null).size();
     Product newProduct = new Product("WAS-LX1", "Huawei P10 Lite", null, Currency.getInstance("USD"), 1, null);
     productDao.save(newProduct);
-    assertEquals(oldSize, productDao.findProducts().size());
+    assertEquals(oldSize, productDao.findProducts(null).size());
   }
+
+  @Test
+  public void testFindProductsByQuery() {
+    String query = "Samsung III";
+    List<Product> filteredAndSortedByQueryList = productDao.findProducts(query);
+    assertEquals("sgs3", filteredAndSortedByQueryList.get(0).getCode());
+    assertEquals("sgs", filteredAndSortedByQueryList.get(1).getCode());
+    assertEquals(2, filteredAndSortedByQueryList.size());
+  }
+
+  @Test
+  public void testGetProductByNullId() {
+    assertFalse(productDao.getProduct(null).isPresent());
+  }
+
 }
