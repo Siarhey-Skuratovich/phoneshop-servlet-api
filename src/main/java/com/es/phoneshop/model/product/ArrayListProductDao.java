@@ -33,13 +33,18 @@ public class ArrayListProductDao implements ProductDao {
   }
 
   @Override
-  public List<Product> findProducts(String query) {
+  public List<Product> findProducts(String query, SortField sortField, SortOrder sortOrder) {
     lock.readLock().lock();
     try {
-      List<Product> productList = products;
+      List<Product> productList = (query != null && !query.isEmpty())
+              ? applyQuery(query, products)
+              : products;
 
-      if (query != null && !query.isEmpty()) {
-        productList = getFilteredAndSortedByQueryList(query, productList);
+      if (sortField != null) {
+        Comparator<Product> sortingComparator = getSortingComparator(sortField, sortOrder);
+        productList = productList.stream()
+                .sorted(sortingComparator)
+                .collect(Collectors.toList());
       }
 
       return productList.stream()
@@ -82,27 +87,6 @@ public class ArrayListProductDao implements ProductDao {
     }
   }
 
-  private List<Product> getFilteredAndSortedByQueryList(String query, List<Product> productList) {
-    String[] keyWords = query.split(" ");
-    return productList.stream()
-            .filter(product -> Arrays.stream(keyWords)
-                    .anyMatch(keyWord -> product.getDescription().contains(keyWord)))
-            .sorted((product1, product2) -> {
-              int matchCountOfProduct1 = 0;
-              int matchCountOfProduct2 = 0;
-              for (String keyWord : keyWords) {
-                if (product1.getDescription().contains(keyWord)) {
-                  matchCountOfProduct1++;
-                }
-                if (product2.getDescription().contains(keyWord)) {
-                  matchCountOfProduct2++;
-                }
-              }
-              return Integer.compare(matchCountOfProduct2, matchCountOfProduct1);
-            })
-            .collect(Collectors.toList());
-  }
-
   private void saveSampleProducts() {
     Currency usd = Currency.getInstance("USD");
     save(new Product("sgs", "Samsung Galaxy S", new BigDecimal(100), usd, 100, "manufacturer/Samsung/Samsung%20Galaxy%20S.jpg"));
@@ -118,5 +102,35 @@ public class ArrayListProductDao implements ProductDao {
     save(new Product("simc56", "Siemens C56", new BigDecimal(70), usd, 20, "manufacturer/Siemens/Siemens%20C56.jpg"));
     save(new Product("simc61", "Siemens C61", new BigDecimal(80), usd, 30, "manufacturer/Siemens/Siemens%20C61.jpg"));
     save(new Product("simsxg75", "Siemens SXG75", new BigDecimal(150), usd, 40, "manufacturer/Siemens/Siemens%20SXG75.jpg"));
+  }
+
+  private List<Product> applyQuery(String query, List<Product> products) {
+    String[] keyWords = query.split(" ");
+    Comparator<Product> comparator = Comparator.comparing((Product product) -> {
+      int matchCount = 0;
+      for (String keyWord : keyWords) {
+        if (product.getDescription().contains(keyWord)) {
+          matchCount++;
+        }
+      }
+      return matchCount;
+    }).reversed();
+
+    return products.stream()
+            .filter(product -> Arrays.stream(keyWords)
+                    .anyMatch(keyWord -> product.getDescription().contains(keyWord)))
+            .sorted(comparator)
+            .collect(Collectors.toList());
+  }
+
+  private Comparator<Product> getSortingComparator(SortField sortField, SortOrder sortOrder) {
+    Comparator<Product> sortingComparator = (sortField == SortField.description)
+            ? Comparator.comparing(Product::getDescription)
+            : Comparator.comparing(Product::getPrice);
+
+    if (sortOrder == SortOrder.desc) {
+      sortingComparator = sortingComparator.reversed();
+    }
+    return sortingComparator;
   }
 }
