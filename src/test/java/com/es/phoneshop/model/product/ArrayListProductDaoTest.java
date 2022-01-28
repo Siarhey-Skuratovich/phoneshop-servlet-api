@@ -1,21 +1,46 @@
 package com.es.phoneshop.model.product;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.when;
 
+import com.es.phoneshop.web.DemoDataServletContextListener;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
 
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
 import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.List;
 import java.util.Optional;
 
+@RunWith(MockitoJUnitRunner.class)
 public class ArrayListProductDaoTest {
   private ProductDao productDao;
+  @Mock
+  private ServletContextEvent event;
+  @Mock
+  private ServletContext servletContext;
+
+  private static boolean setUpIsDone = false;
 
   @Before
   public void setup() {
-    productDao = new ArrayListProductDao();
+    productDao = ArrayListProductDao.getInstance();
+
+    if (setUpIsDone) {
+      return;
+    }
+
+    DemoDataServletContextListener demoDataServletContextListener = new DemoDataServletContextListener();
+    when(event.getServletContext()).thenReturn(servletContext);
+    when(servletContext.getInitParameter("insertDemoData")).thenReturn("true");
+    demoDataServletContextListener.contextInitialized(event);
+
+    setUpIsDone = true;
   }
 
   @Test

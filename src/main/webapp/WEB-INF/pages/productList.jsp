@@ -21,15 +21,11 @@
             Description
           <tags:sortLink sort="description" order="asc"/>
           <tags:sortLink sort="description" order="desc"/>
-<%--            <a href="?sort=description&order=asc&query=${param.query}">asc</a>--%>
-<%--            <a href="?sort=description&order=desc&query=${param.query}">desc</a>--%>
         </td>
         <td class="price">
             Price
           <tags:sortLink sort="price" order="asc"/>
           <tags:sortLink sort="price" order="desc"/>
-<%--            <a href="?sort=price&order=asc&query=${param.query}">asc</a>--%>
-<%--            <a href="?sort=price&order=desc&query=${param.query}">desc</a>--%>
         </td>
       </tr>
     </thead>
