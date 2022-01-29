@@ -40,8 +40,9 @@
             </a>
         </td>
         <td class="price">
+          <a href="${pageContext.servletContext.contextPath}/products/price/${product.id}">
           <fmt:formatNumber value="${product.price}" type="currency" currencySymbol="${product.currency.symbol}"/>
-        </td>
+          </a>
       </tr>
     </c:forEach>
   </table>
