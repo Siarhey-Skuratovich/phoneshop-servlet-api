@@ -1,7 +1,10 @@
 package com.es.phoneshop.model.product;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Currency;
+import java.util.List;
 
 public class Product {
   private Long id;
@@ -17,6 +20,7 @@ public class Product {
   private Currency currency;
   private int stock;
   private String imageUrl;
+  private List<PriceChange> priceChangesHistory;
 
   public Product() {
   }
@@ -29,6 +33,8 @@ public class Product {
     this.currency = currency;
     this.stock = stock;
     this.imageUrl = imageUrl;
+    this.priceChangesHistory = new ArrayList<>();
+    this.priceChangesHistory.add(new PriceChange(LocalDate.now(), price, currency));
   }
 
   public Product(String code, String description, BigDecimal price, Currency currency, int stock, String imageUrl) {
@@ -38,6 +44,8 @@ public class Product {
     this.currency = currency;
     this.stock = stock;
     this.imageUrl = imageUrl;
+    this.priceChangesHistory = new ArrayList<>();
+    this.priceChangesHistory.add(new PriceChange(LocalDate.now(), price, currency));
   }
 
   public Long getId() {
@@ -70,6 +78,7 @@ public class Product {
 
   public void setPrice(BigDecimal price) {
     this.price = price;
+    priceChangesHistory.add(new PriceChange(LocalDate.now(), price, this.currency));
   }
 
   public Currency getCurrency() {
@@ -78,6 +87,7 @@ public class Product {
 
   public void setCurrency(Currency currency) {
     this.currency = currency;
+    priceChangesHistory.add(new PriceChange(LocalDate.now(), this.price, currency));
   }
 
   public int getStock() {
@@ -94,5 +104,9 @@ public class Product {
 
   public void setImageUrl(String imageUrl) {
     this.imageUrl = imageUrl;
+  }
+
+  public List<PriceChange> getPriceChangesHistory() {
+    return priceChangesHistory;
   }
 }
