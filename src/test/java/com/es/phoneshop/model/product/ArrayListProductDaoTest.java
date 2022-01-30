@@ -106,4 +106,37 @@ public class ArrayListProductDaoTest {
     assertFalse(productDao.getProduct(null).isPresent());
   }
 
+  @Test
+  public void testSortingByAscDescription() {
+    List<Product> sortedList = productDao.findProducts(null, SortField.description, SortOrder.asc);
+    for (int i = 1; i < sortedList.size(); i++) {
+      assertTrue(sortedList.get(i - 1).getDescription()
+              .compareTo(sortedList.get(i).getDescription()) <= 0);
+    }
+  }
+
+  @Test
+  public void testSortingByDescDescription() {
+    List<Product> sortedList = productDao.findProducts(null, SortField.description, SortOrder.desc);
+    for (int i = 1; i < sortedList.size(); i++) {
+      assertTrue(sortedList.get(i - 1).getDescription()
+              .compareTo(sortedList.get(i).getDescription()) >= 0);
+    }
+  }
+
+  @Test
+  public void testSortingByAscPrice() {
+    List<Product> sortedList = productDao.findProducts(null, SortField.price, SortOrder.asc);
+    for (int i = 1; i < sortedList.size(); i++) {
+      assertTrue(sortedList.get(i - 1).getPrice().compareTo(sortedList.get(i).getPrice()) <= 0);
+    }
+  }
+
+  @Test
+  public void testSortingByDescPrice() {
+    List<Product> sortedList = productDao.findProducts(null, SortField.price, SortOrder.desc);
+    for (int i = 1; i < sortedList.size(); i++) {
+      assertTrue(sortedList.get(i - 1).getPrice().compareTo(sortedList.get(i).getPrice()) >= 0);
+    }
+  }
 }
