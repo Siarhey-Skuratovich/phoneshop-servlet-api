@@ -7,9 +7,9 @@ import java.util.Currency;
 import java.util.Locale;
 
 public class PriceChange {
-  private String startDate;
-  private BigDecimal price;
-  private Currency currency;
+  private final String startDate;
+  private final BigDecimal price;
+  private final Currency currency;
 
   public PriceChange(LocalDate startDate, BigDecimal price, Currency currency) {
     this.startDate = startDate.format(DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.ENGLISH));
