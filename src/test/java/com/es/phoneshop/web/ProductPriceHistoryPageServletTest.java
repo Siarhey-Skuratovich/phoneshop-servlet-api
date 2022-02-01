@@ -1,5 +1,7 @@
 package com.es.phoneshop.web;
 
+import com.es.phoneshop.model.product.ArrayListProductDao;
+import com.es.phoneshop.model.product.ProductDao;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,18 +34,18 @@ public class ProductPriceHistoryPageServletTest {
   @Mock
   private ServletContext servletContext;
 
-  private static boolean setUpIsDone = false;
-
   private final ProductPriceHistoryPageServlet servlet = new ProductPriceHistoryPageServlet();
 
   @Before
   public void setup() throws ServletException {
-    if (!setUpIsDone) {
+    ProductDao productDao = ArrayListProductDao.getInstance();
+    boolean productArrayIsEmpty = productDao.findProducts(null, null, null).isEmpty();
+
+    if (productArrayIsEmpty) {
       DemoDataServletContextListener demoDataServletContextListener = new DemoDataServletContextListener();
       when(event.getServletContext()).thenReturn(servletContext);
       when(servletContext.getInitParameter("insertDemoData")).thenReturn("true");
       demoDataServletContextListener.contextInitialized(event);
-      setUpIsDone = true;
     }
     servlet.init(config);
     when(request.getRequestDispatcher(anyString())).thenReturn(requestDispatcher);

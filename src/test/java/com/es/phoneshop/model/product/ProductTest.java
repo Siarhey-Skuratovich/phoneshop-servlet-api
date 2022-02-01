@@ -24,13 +24,12 @@ public class ProductTest {
   @Mock
   private ServletContext servletContext;
 
-  private static boolean setUpIsDone = false;
-
   @Before
   public void setUp() {
     productDao = ArrayListProductDao.getInstance();
 
-    if (setUpIsDone) {
+    boolean productArrayIsNotEmpty = !productDao.findProducts(null, null, null).isEmpty();
+    if (productArrayIsNotEmpty) {
       return;
     }
 
@@ -38,8 +37,6 @@ public class ProductTest {
     when(event.getServletContext()).thenReturn(servletContext);
     when(servletContext.getInitParameter("insertDemoData")).thenReturn("true");
     demoDataServletContextListener.contextInitialized(event);
-
-    setUpIsDone = true;
   }
 
   @Test

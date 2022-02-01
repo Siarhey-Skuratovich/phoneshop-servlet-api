@@ -25,13 +25,13 @@ public class ArrayListProductDaoTest {
   @Mock
   private ServletContext servletContext;
 
-  private static boolean setUpIsDone = false;
 
   @Before
   public void setup() {
     productDao = ArrayListProductDao.getInstance();
 
-    if (setUpIsDone) {
+    boolean productArrayIsNotEmpty = !productDao.findProducts(null, null, null).isEmpty();
+    if (productArrayIsNotEmpty) {
       return;
     }
 
@@ -39,8 +39,6 @@ public class ArrayListProductDaoTest {
     when(event.getServletContext()).thenReturn(servletContext);
     when(servletContext.getInitParameter("insertDemoData")).thenReturn("true");
     demoDataServletContextListener.contextInitialized(event);
-
-    setUpIsDone = true;
   }
 
   @Test
@@ -56,8 +54,8 @@ public class ArrayListProductDaoTest {
 
   @Test
   public void checkIfTheProductIsDeleted() {
-    productDao.delete(3L);
-    assertFalse(productDao.getProduct(3L).isPresent());
+    productDao.delete(4L);
+    assertFalse(productDao.getProduct(4L).isPresent());
   }
 
   @Test
