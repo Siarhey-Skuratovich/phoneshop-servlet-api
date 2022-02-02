@@ -3,6 +3,7 @@ package com.es.phoneshop.model.product;
 import java.util.*;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class ArrayListProductDao implements ProductDao {
@@ -42,21 +43,17 @@ public class ArrayListProductDao implements ProductDao {
   public List<Product> findProducts(String query, SortField sortField, SortOrder sortOrder) {
     lock.readLock().lock();
     try {
-      List<Product> productList = (query != null && !query.isEmpty())
-              ? applyQuery(query, products)
-              : products;
+      List<Product> resultProductList = products.stream()
+              .filter(getFilterPredicate(query))
+              .collect(Collectors.toList());
 
-      if (sortField != null) {
-        Comparator<Product> sortingComparator = getSortingComparator(sortField, sortOrder);
-        productList = productList.stream()
+      Comparator<Product> sortingComparator = getSortingComparator(query, sortField, sortOrder);
+      if (sortingComparator != null) {
+        resultProductList = resultProductList.stream()
                 .sorted(sortingComparator)
                 .collect(Collectors.toList());
       }
-
-      return productList.stream()
-              .filter(product -> product.getPrice() != null)
-              .filter(product -> product.getStock() > 0)
-              .collect(Collectors.toList());
+      return resultProductList;
 
     } finally {
       lock.readLock().unlock();
@@ -93,33 +90,46 @@ public class ArrayListProductDao implements ProductDao {
     }
   }
 
-  private List<Product> applyQuery(String query, List<Product> products) {
-    String[] keyWords = query.split(" ");
-    Comparator<Product> comparator = Comparator.comparing((Product product) -> {
-      int matchCount = 0;
-      for (String keyWord : keyWords) {
-        if (product.getDescription().contains(keyWord)) {
-          matchCount++;
-        }
-      }
-      return matchCount;
-    }).reversed();
+  private Predicate<Product> getFilterPredicate(String query) {
+    Predicate<Product> notNullPricePredicate = product -> product.getPrice() != null;
+    Predicate<Product> notEmptyStockPredicate = product -> product.getStock() > 0;
 
-    return products.stream()
-            .filter(product -> Arrays.stream(keyWords)
-                    .anyMatch(keyWord -> product.getDescription().contains(keyWord)))
-            .sorted(comparator)
-            .collect(Collectors.toList());
+    if (query == null) {
+      return notEmptyStockPredicate.and(notNullPricePredicate);
+    }
+
+    String[] keyWords = query.split(" ");
+    Predicate<Product> containsAnyKeyWordPredicate = product -> Arrays.stream(keyWords)
+            .anyMatch(keyWord -> product.getDescription().contains(keyWord));
+
+    return notEmptyStockPredicate.and(notNullPricePredicate).and(containsAnyKeyWordPredicate);
   }
 
-  private Comparator<Product> getSortingComparator(SortField sortField, SortOrder sortOrder) {
-    Comparator<Product> sortingComparator = (sortField == SortField.description)
-            ? Comparator.comparing(Product::getDescription)
-            : Comparator.comparing(Product::getPrice);
+  private Comparator<Product> getSortingComparator(String query, SortField sortField, SortOrder sortOrder) {
+    if (query != null && !query.isEmpty() && sortField == null) {
+      return getSortingComparatorByQuery(query);
+    }
+    if (sortField != null) {
+      return getSortingComparatorByFieldAndOrder(sortField, sortOrder);
+    }
+    return null;
+  }
+
+  private Comparator<Product> getSortingComparatorByQuery(String query) {
+    String[] keyWords = query.split(" ");
+    return Comparator.comparing((Product product) -> Arrays.stream(keyWords)
+            .filter(product.getDescription()::contains).count())
+            .reversed();
+  }
+
+  private Comparator<Product> getSortingComparatorByFieldAndOrder(SortField sortField, SortOrder sortOrder) {
+    EnumMap<SortField, Comparator<Product>> sortingComparators = new EnumMap<>(SortField.class);
+    sortingComparators.put(SortField.description, Comparator.comparing(Product::getDescription));
+    sortingComparators.put(SortField.price, Comparator.comparing(Product::getPrice));
 
     if (sortOrder == SortOrder.desc) {
-      sortingComparator = sortingComparator.reversed();
+      return sortingComparators.get(sortField).reversed();
     }
-    return sortingComparator;
+    return sortingComparators.get(sortField);
   }
 }

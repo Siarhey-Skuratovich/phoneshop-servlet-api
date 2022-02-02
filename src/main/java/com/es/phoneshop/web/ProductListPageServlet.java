@@ -11,7 +11,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Predicate;
 
 public class ProductListPageServlet extends HttpServlet {
   private ProductDao productDao;
@@ -27,9 +28,13 @@ public class ProductListPageServlet extends HttpServlet {
     String query = request.getParameter("query");
     String sortField = request.getParameter("sort");
     String sortOrder = request.getParameter("order");
-    request.setAttribute("products", productDao.findProducts(query,
-            Optional.ofNullable(sortField).map(SortField::valueOf).orElse(null),
-            Optional.ofNullable(sortOrder).map(SortOrder::valueOf).orElse(null)));
+    try {
+      request.setAttribute("products", productDao.findProducts(query,
+              Optional.ofNullable(sortField).map(SortField::valueOf).orElse(null),
+              Optional.ofNullable(sortOrder).map(SortOrder::valueOf).orElse(null)));
+    } catch (IllegalArgumentException e) {
+      request.setAttribute("products", productDao.findProducts(query, null, null));
+    }
     request.getRequestDispatcher("/WEB-INF/pages/productList.jsp").forward(request, response);
   }
 }

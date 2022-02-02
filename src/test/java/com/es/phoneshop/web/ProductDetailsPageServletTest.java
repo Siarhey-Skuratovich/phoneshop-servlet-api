@@ -71,4 +71,15 @@ public class ProductDetailsPageServletTest {
     verify(request).getRequestDispatcher(eq("/WEB-INF/pages/errorProductNotFound.jsp"));
     verify(requestDispatcher).forward(request, response);
   }
+
+  @Test
+  public void testDoGetWithInvalidId() throws ServletException, IOException {
+    when(request.getPathInfo()).thenReturn("/asd");
+    servlet.doGet(request, response);
+
+    verify(request).setAttribute(eq("productId"), any());
+    verify(response).setStatus(HttpServletResponse.SC_NOT_FOUND);
+    verify(request).getRequestDispatcher(eq("/WEB-INF/pages/errorProductNotFound.jsp"));
+    verify(requestDispatcher).forward(request, response);
+  }
 }
