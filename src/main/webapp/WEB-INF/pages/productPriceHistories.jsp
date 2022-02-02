@@ -12,25 +12,30 @@
     ${product.description}
   </h2>
   <table>
+    <tr>
+      <td>
+        <b>Start day</b>
+      </td>
+      <td>
+        <b>Price</b>
+      </td>
+    </tr>
     <c:forEach var="change" items="${product.priceChangesHistory}">
-      <tr>
-        <td>
-          <b>Start day</b>
-        </td>
-        <td>
-          <b>Price</b>
-        </td>
-      </tr>
       <tr>
         <td>
           ${change.startDate}
         </td>
         <td>
-          <fmt:formatNumber value="${product.price}" type="currency" currencySymbol="${product.currency.symbol}"/>
+          <fmt:formatNumber value="${change.price}" type="currency" currencySymbol="${change.currency.symbol}"/>
         </td>
       </tr>
     </c:forEach>
   </table>
+  <p>
+    <a href="${pageContext.servletContext.contextPath}/products">
+      <button>To product list</button>
+    </a>
+  </p>
   <p>
     (c) Expert-Soft
   </p>

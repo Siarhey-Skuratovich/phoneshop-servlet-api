@@ -8,7 +8,6 @@
   <p>
       ${product.description}
   </p>
-
   <table>
     <tr>
       <td>Image</td>
@@ -31,7 +30,17 @@
       <td>${product.stock}</td>
     </tr>
   </table>
-    <p>
-        (c) Expert-Soft
-    </p>
+  <p>
+    <a href="${pageContext.servletContext.contextPath}/products/price/${product.id}">
+      <button>Watch the price history</button>
+    </a>
+  </p>
+  <p>
+    <a href="${pageContext.servletContext.contextPath}/products">
+      <button>To product list</button>
+    </a>
+  </p>
+  <p>
+    (c) Expert-Soft
+  </p>
 </tags:master>

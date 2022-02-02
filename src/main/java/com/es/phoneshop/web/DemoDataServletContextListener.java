@@ -8,8 +8,9 @@ import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import java.math.BigDecimal;
 import java.util.Currency;
+import java.util.List;
 
-  public class DemoDataServletContextListener implements ServletContextListener {
+public class DemoDataServletContextListener implements ServletContextListener {
   private final ProductDao productDao;
 
   public DemoDataServletContextListener() {
@@ -21,6 +22,7 @@ import java.util.Currency;
     boolean insertDemoData = Boolean.parseBoolean(event.getServletContext().getInitParameter("insertDemoData"));
     if (insertDemoData) {
       saveSampleProducts();
+      changePricesForVisibleDemoData();
     }
   }
 
@@ -44,5 +46,14 @@ import java.util.Currency;
     productDao.save(new Product("simc56", "Siemens C56", new BigDecimal(70), usd, 20, "manufacturer/Siemens/Siemens%20C56.jpg"));
     productDao.save(new Product("simc61", "Siemens C61", new BigDecimal(80), usd, 30, "manufacturer/Siemens/Siemens%20C61.jpg"));
     productDao.save(new Product("simsxg75", "Siemens SXG75", new BigDecimal(150), usd, 40, "manufacturer/Siemens/Siemens%20SXG75.jpg"));
+  }
+
+  private void changePricesForVisibleDemoData() {
+    List<Product> visibleProducts = productDao.findProducts(null, null, null);
+    for (Product product : visibleProducts) {
+      product.setPrice(new BigDecimal(product.getPrice().intValue() + 100));
+      product.setPrice(new BigDecimal(product.getPrice().intValue() + 100));
+      productDao.save(product);
+    }
   }
 }
