@@ -8,11 +8,15 @@ import java.util.stream.Collectors;
 
 public class ArrayListProductDao implements ProductDao {
   private long maxId;
-  private final List<Product> products;
+  private final List<Product> products = new ArrayList<>();
+  private final Map<SortField, Comparator<Product>> sortingComparators;
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
   private ArrayListProductDao() {
-    products = new ArrayList<>();
+    EnumMap<SortField, Comparator<Product>> sortingComparators = new EnumMap<>(SortField.class);
+    sortingComparators.put(SortField.description, Comparator.comparing(Product::getDescription));
+    sortingComparators.put(SortField.price, Comparator.comparing(Product::getPrice));
+    this.sortingComparators = Collections.unmodifiableMap(sortingComparators);
   }
 
   private static class InstanceHolder {
@@ -123,10 +127,6 @@ public class ArrayListProductDao implements ProductDao {
   }
 
   private Comparator<Product> getSortingComparatorByFieldAndOrder(SortField sortField, SortOrder sortOrder) {
-    EnumMap<SortField, Comparator<Product>> sortingComparators = new EnumMap<>(SortField.class);
-    sortingComparators.put(SortField.description, Comparator.comparing(Product::getDescription));
-    sortingComparators.put(SortField.price, Comparator.comparing(Product::getPrice));
-
     if (sortOrder == SortOrder.desc) {
       return sortingComparators.get(sortField).reversed();
     }
