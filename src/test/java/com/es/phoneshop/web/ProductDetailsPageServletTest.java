@@ -2,6 +2,8 @@ package com.es.phoneshop.web;
 
 import com.es.phoneshop.model.product.ArrayListProductDao;
 import com.es.phoneshop.model.product.ProductDao;
+import com.es.phoneshop.model.product.cart.CartService;
+import com.es.phoneshop.model.product.cart.DefaultCartService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -13,6 +15,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -33,6 +37,8 @@ public class ProductDetailsPageServletTest {
   private ServletContextEvent event;
   @Mock
   private ServletContext servletContext;
+
+  private final CartService cartService = DefaultCartService.getInstance();
 
   private final ProductDetailsPageServlet servlet = new ProductDetailsPageServlet();
 
@@ -82,4 +88,60 @@ public class ProductDetailsPageServletTest {
     verify(request).getRequestDispatcher(eq("/WEB-INF/pages/errorProductNotFound.jsp"));
     verify(requestDispatcher).forward(request, response);
   }
+
+  @Test
+  public void testDoPostWithInvalidId() throws ServletException, IOException {
+    when(request.getPathInfo()).thenReturn("/asd");
+    servlet.doPost(request, response);
+
+    verify(request).setAttribute(eq("productId"), any());
+    verify(response).setStatus(HttpServletResponse.SC_NOT_FOUND);
+    verify(request).getRequestDispatcher(eq("/WEB-INF/pages/errorProductNotFound.jsp"));
+    verify(requestDispatcher).forward(request, response);
+  }
+
+  @Test
+  public void testDoPostWithNotExistingId() throws ServletException, IOException {
+    when(request.getPathInfo()).thenReturn("/46");
+    servlet.doPost(request, response);
+
+    verify(request).setAttribute(eq("productId"), any());
+    verify(response).setStatus(HttpServletResponse.SC_NOT_FOUND);
+    verify(request).getRequestDispatcher(eq("/WEB-INF/pages/errorProductNotFound.jsp"));
+    verify(requestDispatcher).forward(request, response);
+    assertFalse(cartService.getCart().getCartItemByProductId(46L).isPresent());
+  }
+
+  @Test
+  public void testDoPostWithInvalidQuantity() throws ServletException, IOException {
+    when(request.getPathInfo()).thenReturn("/6");
+    when(request.getParameter("quantity")).thenReturn("asd");
+    servlet.doPost(request, response);
+
+    verify(request).setAttribute(eq("error"), eq("Not a number"));
+    verify(response).setStatus(HttpServletResponse.SC_BAD_REQUEST);
+    assertFalse(cartService.getCart().getCartItemByProductId(6L).isPresent());
+  }
+
+  @Test
+  public void testDoPostWithQuantityMoreThanStock() throws ServletException, IOException {
+    when(request.getPathInfo()).thenReturn("/6");
+    when(request.getParameter("quantity")).thenReturn("1000");
+    servlet.doPost(request, response);
+
+    verify(request).setAttribute(eq("error"), any());
+    verify(response).setStatus(HttpServletResponse.SC_BAD_REQUEST);
+    assertFalse(cartService.getCart().getCartItemByProductId(6L).isPresent());
+  }
+
+  @Test
+  public void testDoPostWithValidAndExistingValues() throws ServletException, IOException  {
+    when(request.getPathInfo()).thenReturn("/5");
+    when(request.getParameter("quantity")).thenReturn("3");
+    servlet.doPost(request, response);
+
+    verify(response).sendRedirect(any());
+    assertTrue(cartService.getCart().getCartItemByProductId(5L).isPresent());
+  }
+
 }
