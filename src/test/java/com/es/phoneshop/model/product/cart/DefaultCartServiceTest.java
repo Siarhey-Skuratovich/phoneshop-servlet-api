@@ -33,7 +33,7 @@ public class DefaultCartServiceTest {
   @Mock
   private HttpSession session;
 
-  private Cart cart = new Cart();
+  private final Cart cart = new Cart();
 
   @Before
   public void setUp() {
@@ -54,7 +54,7 @@ public class DefaultCartServiceTest {
   @Test
   public void testAddingNewProductInCart() {
     long productId = 3L;
-    cartService.add(cart,productId, 1);
+    cartService.add(cart,productId, 1, session);
     Optional<CartItem> optionalCartItem = cartService.getCart(request).getCartItemByProductId(productId);
     assertTrue(optionalCartItem.isPresent());
   }
@@ -62,8 +62,8 @@ public class DefaultCartServiceTest {
   @Test
   public void testAddingExistingProduct() {
     long productId = 5L;
-    cartService.add(cart,productId, 1);
-    cartService.add(cart,productId, 1);
+    cartService.add(cart,productId, 1, session);
+    cartService.add(cart,productId, 1, session);
     Optional<CartItem> optionalCartItem = cartService.getCart(request).getCartItemByProductId(productId);
     assertEquals(2, optionalCartItem.get().getQuantity());
 

@@ -53,17 +53,17 @@ public class CartTest {
   @Test
   public void testGetCartItemByExistingProductId() {
     Product product = productDao.getProduct(2L).get();
-    cartService.add(cart,0L, 1);
-    cartService.add(cart,product.getId(), 1);
-    cartService.add(cart,3L, 1);
+    cartService.add(cart,0L, 1, session);
+    cartService.add(cart,product.getId(), 1, session);
+    cartService.add(cart,3L, 1, session);
     assertTrue(cartService.getCart(request).getCartItemByProductId(product.getId()).isPresent());
   }
 
   @Test
   public void testGetCartItemByNotExistingProductId() {
-    cartService.add(cart,0L, 1);
-    cartService.add(cart,2L, 1);
-    cartService.add(cart,3L, 1);
+    cartService.add(cart,0L, 1, session);
+    cartService.add(cart,2L, 1, session);
+    cartService.add(cart,3L, 1, session);
     assertFalse(cartService.getCart(request).getCartItemByProductId(54L).isPresent());
   }
 }

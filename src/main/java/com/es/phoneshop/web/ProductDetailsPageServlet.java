@@ -12,6 +12,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.text.NumberFormat;
+import java.text.ParseException;
+import java.util.Locale;
 import java.util.Optional;
 
 public class ProductDetailsPageServlet extends HttpServlet {
@@ -60,14 +63,16 @@ public class ProductDetailsPageServlet extends HttpServlet {
     Product product = productOptional.get();
 
     String quantityString = request.getParameter("quantity");
-    if (isNotADigit(quantityString)) {
+    int quantity;
+    try {
+      quantity = parseQuantityAccordingToLocale(request.getLocale(), quantityString);
+    } catch (ParseException e) {
       request.setAttribute("error", "Not a number");
       response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
       doGet(request, response);
       return;
     }
 
-    int quantity = Integer.parseInt(quantityString);
     if (quantity > product.getStock()) {
       request.setAttribute("error", "Out of stock. Available: " + product.getStock());
       response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -75,7 +80,7 @@ public class ProductDetailsPageServlet extends HttpServlet {
       return;
     }
 
-    cartService.add(cartService.getCart(request), productId, quantity);
+    cartService.add(cartService.getCart(request), productId, quantity, request.getSession());
     response.sendRedirect(request.getContextPath() + "/products/" + productId + "?message=Product added to cart");
   }
 
@@ -84,7 +89,12 @@ public class ProductDetailsPageServlet extends HttpServlet {
   }
 
   private boolean isNotADigit(String string) {
-    return !string.matches("\\d+");
+    return string.matches("\\D+");
+  }
+
+  private int parseQuantityAccordingToLocale(Locale locale, String quantityString) throws ParseException {
+    NumberFormat format = NumberFormat.getInstance(locale);
+    return format.parse(quantityString).intValue();
   }
 
   private void forwardToProductNotFoundPage(HttpServletRequest request,
