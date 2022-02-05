@@ -1,6 +1,7 @@
 package com.es.phoneshop.web;
 
 import com.es.phoneshop.model.product.ArrayListProductDao;
+import com.es.phoneshop.model.product.Product;
 import com.es.phoneshop.model.product.ProductDao;
 import com.es.phoneshop.model.product.cart.Cart;
 import com.es.phoneshop.model.product.cart.CartService;
@@ -16,6 +17,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.Currency;
+import java.util.Locale;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -39,18 +43,21 @@ public class ProductDetailsPageServletTest {
   private ServletContextEvent event;
   @Mock
   private ServletContext servletContext;
+  @Mock
+  private HttpSession session;
+
+  private ProductDao productDao;
 
   private final CartService cartService = DefaultCartService.getInstance();
 
   private final ProductDetailsPageServlet servlet = new ProductDetailsPageServlet();
-  @Mock
-  private HttpSession session;
 
-  private Cart cart = new Cart();
+  private final Cart cart = new Cart();
+
 
   @Before
   public void setup() throws ServletException {
-    ProductDao productDao = ArrayListProductDao.getInstance();
+    productDao = ArrayListProductDao.getInstance();
     boolean productArrayIsEmpty = productDao.findProducts(null, null, null).isEmpty();
 
     if (productArrayIsEmpty) {
@@ -64,6 +71,7 @@ public class ProductDetailsPageServletTest {
 
     when(request.getSession()).thenReturn(session);
     when(session.getAttribute(DefaultCartService.class.getName() + ".cart")).thenReturn(cart);
+    when(request.getLocale()).thenReturn(Locale.ENGLISH);
   }
 
   @Test
@@ -153,4 +161,20 @@ public class ProductDetailsPageServletTest {
     assertTrue(cartService.getCart(request).getCartItemByProductId(5L).isPresent());
   }
 
+  @Test
+  public void testDoPostWithQuantityConveyedAccordingToEnglishLocale() throws ServletException, IOException   {
+    Product newProduct = new Product("WAS-LX1",
+            "Huawei P10 Lite",
+            new BigDecimal(100),
+            Currency.getInstance("USD"),
+            10000,
+            null);
+    productDao.save(newProduct);
+    when(request.getPathInfo()).thenReturn("/" + newProduct.getId());
+    when(request.getParameter("quantity")).thenReturn("1,000");
+    servlet.doPost(request, response);
+
+    verify(response).sendRedirect(any());
+    assertTrue(cartService.getCart(request).getCartItemByProductId(newProduct.getId()).isPresent());
+  }
 }
