@@ -1,7 +1,9 @@
 package com.es.phoneshop.model.product.cart;
 
-public interface CartService {
-  Cart getCart();
+import javax.servlet.http.HttpServletRequest;
 
-  void add(Long productId, int quantity);
+public interface CartService {
+  Cart getCart(HttpServletRequest request);
+
+  void add(Cart cart, Long productId, int quantity);
 }

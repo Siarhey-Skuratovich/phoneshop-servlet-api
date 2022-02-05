@@ -38,7 +38,7 @@ public class ProductDetailsPageServlet extends HttpServlet {
       return;
     }
     request.setAttribute("product", optionalProduct.get());
-    request.setAttribute("cart", cartService.getCart());
+    request.setAttribute("cart", cartService.getCart(request));
     request.getRequestDispatcher("/WEB-INF/pages/product.jsp").forward(request, response);
   }
 
@@ -75,7 +75,7 @@ public class ProductDetailsPageServlet extends HttpServlet {
       return;
     }
 
-    cartService.add(productId, quantity);
+    cartService.add(cartService.getCart(request), productId, quantity);
     response.sendRedirect(request.getContextPath() + "/products/" + productId + "?message=Product added to cart");
   }
 
