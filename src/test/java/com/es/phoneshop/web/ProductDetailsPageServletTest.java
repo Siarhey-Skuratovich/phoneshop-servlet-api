@@ -2,6 +2,7 @@ package com.es.phoneshop.web;
 
 import com.es.phoneshop.model.product.ArrayListProductDao;
 import com.es.phoneshop.model.product.ProductDao;
+import com.es.phoneshop.model.product.cart.Cart;
 import com.es.phoneshop.model.product.cart.CartService;
 import com.es.phoneshop.model.product.cart.DefaultCartService;
 import org.junit.Before;
@@ -13,6 +14,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
 import static org.junit.Assert.assertFalse;
@@ -41,6 +43,10 @@ public class ProductDetailsPageServletTest {
   private final CartService cartService = DefaultCartService.getInstance();
 
   private final ProductDetailsPageServlet servlet = new ProductDetailsPageServlet();
+  @Mock
+  private HttpSession session;
+
+  private Cart cart = new Cart();
 
   @Before
   public void setup() throws ServletException {
@@ -55,6 +61,9 @@ public class ProductDetailsPageServletTest {
     }
     servlet.init(config);
     when(request.getRequestDispatcher(anyString())).thenReturn(requestDispatcher);
+
+    when(request.getSession()).thenReturn(session);
+    when(session.getAttribute(DefaultCartService.class.getName() + ".cart")).thenReturn(cart);
   }
 
   @Test
@@ -109,7 +118,7 @@ public class ProductDetailsPageServletTest {
     verify(response).setStatus(HttpServletResponse.SC_NOT_FOUND);
     verify(request).getRequestDispatcher(eq("/WEB-INF/pages/errorProductNotFound.jsp"));
     verify(requestDispatcher).forward(request, response);
-    assertFalse(cartService.getCart().getCartItemByProductId(46L).isPresent());
+    assertFalse(cartService.getCart(request).getCartItemByProductId(46L).isPresent());
   }
 
   @Test
@@ -120,7 +129,7 @@ public class ProductDetailsPageServletTest {
 
     verify(request).setAttribute(eq("error"), eq("Not a number"));
     verify(response).setStatus(HttpServletResponse.SC_BAD_REQUEST);
-    assertFalse(cartService.getCart().getCartItemByProductId(6L).isPresent());
+    assertFalse(cartService.getCart(request).getCartItemByProductId(6L).isPresent());
   }
 
   @Test
@@ -131,7 +140,7 @@ public class ProductDetailsPageServletTest {
 
     verify(request).setAttribute(eq("error"), any());
     verify(response).setStatus(HttpServletResponse.SC_BAD_REQUEST);
-    assertFalse(cartService.getCart().getCartItemByProductId(6L).isPresent());
+    assertFalse(cartService.getCart(request).getCartItemByProductId(6L).isPresent());
   }
 
   @Test
@@ -141,7 +150,7 @@ public class ProductDetailsPageServletTest {
     servlet.doPost(request, response);
 
     verify(response).sendRedirect(any());
-    assertTrue(cartService.getCart().getCartItemByProductId(5L).isPresent());
+    assertTrue(cartService.getCart(request).getCartItemByProductId(5L).isPresent());
   }
 
 }
