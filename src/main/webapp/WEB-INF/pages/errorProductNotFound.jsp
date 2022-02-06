@@ -8,7 +8,4 @@
   <h1>
       Product with code ${productId} not found
   </h1>
-  <p>
-    (c) Expert-Soft
-  </p>
 </tags:master>
