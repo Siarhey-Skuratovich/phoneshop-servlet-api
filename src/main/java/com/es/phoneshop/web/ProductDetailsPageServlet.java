@@ -91,7 +91,7 @@ public class ProductDetailsPageServlet extends HttpServlet {
   }
 
   private boolean isNotADigit(String string) {
-    return string.matches("\\D+");
+    return !string.matches("\\d+");
   }
 
   private int parseQuantityAccordingToLocale(Locale locale, String quantityString) throws ParseException {
