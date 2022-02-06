@@ -18,11 +18,12 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayDeque;
 import java.util.Currency;
+import java.util.Deque;
 import java.util.Locale;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -152,7 +153,7 @@ public class ProductDetailsPageServletTest {
   }
 
   @Test
-  public void testDoPostWithValidAndExistingValues() throws ServletException, IOException  {
+  public void testDoPostWithValidAndExistingValues() throws ServletException, IOException {
     when(request.getPathInfo()).thenReturn("/5");
     when(request.getParameter("quantity")).thenReturn("3");
     servlet.doPost(request, response);
@@ -162,7 +163,7 @@ public class ProductDetailsPageServletTest {
   }
 
   @Test
-  public void testDoPostWithQuantityConveyedAccordingToEnglishLocale() throws ServletException, IOException   {
+  public void testDoPostWithQuantityConveyedAccordingToEnglishLocale() throws ServletException, IOException {
     Product newProduct = new Product("WAS-LX1",
             "Huawei P10 Lite",
             new BigDecimal(100),
@@ -176,5 +177,44 @@ public class ProductDetailsPageServletTest {
 
     verify(response).sendRedirect(any());
     assertTrue(cartService.getCart(request).getCartItemByProductId(newProduct.getId()).isPresent());
+  }
+
+  @Test
+  public void testDoGetAddingProductToRecentlyViewedBlock() throws ServletException, IOException {
+    long productId = 6L;
+    when(request.getPathInfo()).thenReturn("/" + productId);
+    Deque<Product> recentlyViewedProducts = new ArrayDeque<>(3);
+    when(session.getAttribute("recentlyViewedProducts")).thenReturn(recentlyViewedProducts);
+    servlet.doGet(request, response);
+
+    assertEquals(1, recentlyViewedProducts.size());
+    assertTrue(recentlyViewedProducts.stream().anyMatch(product -> product.getId().equals(productId)));
+    assertEquals(productId, recentlyViewedProducts.getFirst().getId().longValue());
+  }
+
+  @Test
+  public void testDoGetRemovingDuplicatesInRecentlyViewedBlock() throws ServletException, IOException {
+    long productId = 6L;
+    when(request.getPathInfo()).thenReturn("/" + productId);
+    Deque<Product> recentlyViewedProducts = new ArrayDeque<>(3);
+    when(session.getAttribute("recentlyViewedProducts")).thenReturn(recentlyViewedProducts);
+    servlet.doGet(request, response);
+    servlet.doGet(request, response);
+
+    assertEquals(1, recentlyViewedProducts.size());
+    assertTrue(recentlyViewedProducts.stream().anyMatch(product -> product.getId().equals(productId)));
+    assertEquals(productId, recentlyViewedProducts.getFirst().getId().longValue());
+  }
+
+  @Test
+  public void testDoGetRecentlyViewedBlockMustBeLessThan4() throws ServletException, IOException {
+    Deque<Product> recentlyViewedProducts = new ArrayDeque<>(3);
+    when(session.getAttribute("recentlyViewedProducts")).thenReturn(recentlyViewedProducts);
+    for (long i = 2L; i < 7L; i++) {
+      when(request.getPathInfo()).thenReturn("/" + i);
+      servlet.doGet(request, response);
+    }
+
+    assertEquals(3, recentlyViewedProducts.size());
   }
 }
