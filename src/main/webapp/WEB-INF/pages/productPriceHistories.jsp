@@ -36,8 +36,5 @@
       <button>To product list</button>
     </a>
   </p>
-  <p>
-    (c) Expert-Soft
-  </p>
 </tags:master>
 

@@ -7,7 +7,4 @@
   <h1>
       Sorry, an error occurred
   </h1>
-  <p>
-    (c) Expert-Soft
-  </p>
 </tags:master>
