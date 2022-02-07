@@ -48,6 +48,7 @@ public class CartTest {
 
     when(request.getSession()).thenReturn(session);
     when(session.getAttribute(DefaultCartService.class.getName() + ".cart")).thenReturn(cart);
+    when(session.getId()).thenReturn("123");
   }
 
   @Test

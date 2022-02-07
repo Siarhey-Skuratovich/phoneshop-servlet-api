@@ -73,6 +73,7 @@ public class ProductDetailsPageServletTest {
     when(request.getSession()).thenReturn(session);
     when(session.getAttribute(DefaultCartService.class.getName() + ".cart")).thenReturn(cart);
     when(request.getLocale()).thenReturn(Locale.ENGLISH);
+    when(session.getId()).thenReturn("123");
   }
 
   @Test
