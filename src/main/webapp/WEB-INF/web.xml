@@ -41,7 +41,6 @@
     <url-pattern>/products/price/*</url-pattern>
   </servlet-mapping>
 
-
   <error-page>
     <location>/WEB-INF/pages/error.jsp</location>
     <error-code>500</error-code>

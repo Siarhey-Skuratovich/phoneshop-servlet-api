@@ -3,6 +3,7 @@ package com.es.phoneshop.model.product.cart;
 import com.es.phoneshop.model.product.ArrayListProductDao;
 import com.es.phoneshop.model.product.Product;
 import com.es.phoneshop.model.product.ProductDao;
+import com.es.phoneshop.model.product.mutex.IdMutexProvider;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -10,8 +11,8 @@ import java.util.Optional;
 
 public class DefaultCartService implements CartService{
   private static final String CART_SESSION_ATTRIBUTE = DefaultCartService.class.getName() + ".cart";
-  private static final String SESSION_MUTEX_ATTRIBUTE = DefaultCartService.class.getName() + ".mutex";
   private final ProductDao productDao;
+  private final IdMutexProvider idMutexProvider = new IdMutexProvider();
 
   private DefaultCartService() {
     this.productDao = ArrayListProductDao.getInstance();
@@ -49,12 +50,7 @@ public class DefaultCartService implements CartService{
     }
   }
 
-  private Object getSessionMutex(HttpSession session) {
-    Object mutex = session.getAttribute(SESSION_MUTEX_ATTRIBUTE);
-    if (mutex == null) {
-      mutex = new Object();
-      session.setAttribute(SESSION_MUTEX_ATTRIBUTE, mutex);
-    }
-    return mutex;
+  private IdMutexProvider.Mutex getSessionMutex(HttpSession session) {
+    return idMutexProvider.getMutex(session.getId());
   }
 }
