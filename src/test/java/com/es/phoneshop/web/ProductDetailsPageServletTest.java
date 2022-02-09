@@ -4,6 +4,7 @@ import com.es.phoneshop.model.product.ArrayListProductDao;
 import com.es.phoneshop.model.product.Product;
 import com.es.phoneshop.model.product.ProductDao;
 import com.es.phoneshop.model.product.cart.Cart;
+import com.es.phoneshop.model.product.cart.CartItem;
 import com.es.phoneshop.model.product.cart.CartService;
 import com.es.phoneshop.model.product.cart.DefaultCartService;
 import org.junit.Before;
@@ -73,7 +74,6 @@ public class ProductDetailsPageServletTest {
     when(request.getSession()).thenReturn(session);
     when(session.getAttribute(DefaultCartService.class.getName() + ".cart")).thenReturn(cart);
     when(request.getLocale()).thenReturn(Locale.ENGLISH);
-    when(session.getId()).thenReturn("123");
   }
 
   @Test
@@ -88,73 +88,85 @@ public class ProductDetailsPageServletTest {
 
   @Test
   public void testDoGetWithNotExistingId() throws ServletException, IOException {
-    when(request.getPathInfo()).thenReturn("/54");
+    long productId = 54L;
+    when(request.getPathInfo()).thenReturn("/" + productId);
     servlet.doGet(request, response);
 
-    verify(request).setAttribute(eq("productId"), any());
-    verify(response).setStatus(HttpServletResponse.SC_NOT_FOUND);
-    verify(request).getRequestDispatcher(eq("/WEB-INF/pages/errorProductNotFound.jsp"));
-    verify(requestDispatcher).forward(request, response);
+    verify(response).sendRedirect(request.getContextPath()
+            + "/product-not-found"
+            + "?productId="
+            + productId);
   }
 
   @Test
   public void testDoGetWithInvalidId() throws ServletException, IOException {
-    when(request.getPathInfo()).thenReturn("/asd");
+    String productId = "asd";
+    when(request.getPathInfo()).thenReturn("/" + productId);
     servlet.doGet(request, response);
 
-    verify(request).setAttribute(eq("productId"), any());
-    verify(response).setStatus(HttpServletResponse.SC_NOT_FOUND);
-    verify(request).getRequestDispatcher(eq("/WEB-INF/pages/errorProductNotFound.jsp"));
-    verify(requestDispatcher).forward(request, response);
+    verify(response).sendRedirect(request.getContextPath()
+            + "/product-not-found"
+            + "?productId="
+            + productId);
   }
 
   @Test
-  public void testDoPostWithInvalidId() throws ServletException, IOException {
-    when(request.getPathInfo()).thenReturn("/asd");
+  public void testDoPostWithInvalidId() throws IOException {
+    String productId = "asd";
+    when(request.getPathInfo()).thenReturn("/" + productId);
     servlet.doPost(request, response);
 
-    verify(request).setAttribute(eq("productId"), any());
-    verify(response).setStatus(HttpServletResponse.SC_NOT_FOUND);
-    verify(request).getRequestDispatcher(eq("/WEB-INF/pages/errorProductNotFound.jsp"));
-    verify(requestDispatcher).forward(request, response);
+    verify(response).sendRedirect(request.getContextPath()
+            + "/product-not-found"
+            + "?productId="
+            + productId);
   }
 
   @Test
-  public void testDoPostWithNotExistingId() throws ServletException, IOException {
-    when(request.getPathInfo()).thenReturn("/46");
+  public void testDoPostWithNotExistingId() throws IOException {
+    long productId = 46L;
+    when(request.getPathInfo()).thenReturn("/" + productId);
     servlet.doPost(request, response);
 
-    verify(request).setAttribute(eq("productId"), any());
-    verify(response).setStatus(HttpServletResponse.SC_NOT_FOUND);
-    verify(request).getRequestDispatcher(eq("/WEB-INF/pages/errorProductNotFound.jsp"));
-    verify(requestDispatcher).forward(request, response);
+    verify(response).sendRedirect(request.getContextPath()
+            + "/product-not-found"
+            + "?productId="
+            + productId);
     assertFalse(cartService.getCart(request).getCartItemByProductId(46L).isPresent());
   }
 
   @Test
-  public void testDoPostWithInvalidQuantity() throws ServletException, IOException {
-    when(request.getPathInfo()).thenReturn("/6");
+  public void testDoPostWithInvalidQuantity() throws IOException {
+    long productId = 6L;
+    when(request.getPathInfo()).thenReturn("/" + productId);
     when(request.getParameter("quantity")).thenReturn("asd");
     servlet.doPost(request, response);
 
-    verify(request).setAttribute(eq("error"), eq("Not a number"));
-    verify(response).setStatus(HttpServletResponse.SC_BAD_REQUEST);
-    assertFalse(cartService.getCart(request).getCartItemByProductId(6L).isPresent());
+    verify(response).sendRedirect(request.getContextPath()
+            + "/products/"
+            + productId
+            + "?error=Not a number");
+    assertFalse(cartService.getCart(request).getCartItemByProductId(productId).isPresent());
   }
 
   @Test
-  public void testDoPostWithQuantityMoreThanStock() throws ServletException, IOException {
-    when(request.getPathInfo()).thenReturn("/6");
+  public void testDoPostWithQuantityMoreThanStock() throws IOException {
+    long productId = 6L;
+    Product product = productDao.getProduct(productId).get();
+    when(request.getPathInfo()).thenReturn("/" + productId);
     when(request.getParameter("quantity")).thenReturn("1000");
     servlet.doPost(request, response);
 
-    verify(request).setAttribute(eq("error"), any());
-    verify(response).setStatus(HttpServletResponse.SC_BAD_REQUEST);
-    assertFalse(cartService.getCart(request).getCartItemByProductId(6L).isPresent());
+    verify(response).sendRedirect(request.getContextPath()
+            + "/products/"
+            + productId
+            + "?error=Out of stock. Available:"
+            + (product.getStock()));
+    assertFalse(cartService.getCart(request).getCartItemByProductId(productId).isPresent());
   }
 
   @Test
-  public void testDoPostWithValidAndExistingValues() throws ServletException, IOException {
+  public void testDoPostWithValidAndExistingValues() throws IOException {
     when(request.getPathInfo()).thenReturn("/5");
     when(request.getParameter("quantity")).thenReturn("3");
     servlet.doPost(request, response);
@@ -164,7 +176,7 @@ public class ProductDetailsPageServletTest {
   }
 
   @Test
-  public void testDoPostWithQuantityConveyedAccordingToEnglishLocale() throws ServletException, IOException {
+  public void testDoPostWithQuantityConveyedAccordingToEnglishLocale() throws IOException {
     Product newProduct = new Product("WAS-LX1",
             "Huawei P10 Lite",
             new BigDecimal(100),
@@ -217,5 +229,50 @@ public class ProductDetailsPageServletTest {
     }
 
     assertEquals(3, recentlyViewedProducts.size());
+  }
+
+  @Test
+  public void testDoPostIfQuantitySumInCartWillBeMoreThanStock() throws IOException {
+    long productId = 6L;
+    Product product = productDao.getProduct(productId).get();
+    when(request.getPathInfo()).thenReturn("/" + productId);
+
+    cartService.add(cart, productId, 3, session);
+
+    when(request.getParameter("quantity")).thenReturn("30");
+    servlet.doPost(request, response);
+
+    verify(response).sendRedirect(request.getContextPath()
+            + "/products/"
+            + productId
+            + "?error=Out of stock. "
+            + (product.getStock() - cartService.getCart(request).getCartItemByProductId(productId).get().getQuantity())
+            + " more available.");
+  }
+
+  @Test
+  public void testDoPostIfQuantityLessThan0() throws IOException {
+    long productId = 6L;
+    when(request.getPathInfo()).thenReturn("/" + productId);
+    when(request.getParameter("quantity")).thenReturn("-3");
+    servlet.doPost(request, response);
+
+    verify(response).sendRedirect(request.getContextPath()
+            + "/products/"
+            + productId
+            + "?error=Quantity must be more than 0");
+  }
+
+  @Test
+  public void testDoPostIfQuantityIsNull() throws IOException {
+    long productId = 6L;
+    when(request.getPathInfo()).thenReturn("/" + productId);
+    when(request.getParameter("quantity")).thenReturn(null);
+    servlet.doPost(request, response);
+
+    verify(response).sendRedirect(request.getContextPath()
+            + "/products/"
+            + productId
+            + "?error=You haven't specified a quantity");
   }
 }

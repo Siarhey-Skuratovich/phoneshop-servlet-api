@@ -3,8 +3,11 @@ package com.es.phoneshop.web;
 import com.es.phoneshop.model.product.ArrayListProductDao;
 import com.es.phoneshop.model.product.Product;
 import com.es.phoneshop.model.product.ProductDao;
+import com.es.phoneshop.model.product.cart.CartItem;
 import com.es.phoneshop.model.product.cart.CartService;
 import com.es.phoneshop.model.product.cart.DefaultCartService;
+import com.es.phoneshop.util.lock.DefaultSessionLockManager;
+import com.es.phoneshop.util.lock.SessionLockManager;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -16,11 +19,15 @@ import java.io.IOException;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.locks.Lock;
 
 public class ProductDetailsPageServlet extends HttpServlet {
   private static final String RECENTLY_VIEWED_PRODUCTS_ATTRIBUTE = "recentlyViewedProducts";
+  private static final String LOCK_SESSION_ATTRIBUTE = ProductDetailsPageServlet.class.getName() + ".lock";
   private ProductDao productDao;
   private CartService cartService;
+  private final SessionLockManager sessionLockManager = new DefaultSessionLockManager();
 
   @Override
   public void init(ServletConfig config) throws ServletException {
@@ -31,14 +38,14 @@ public class ProductDetailsPageServlet extends HttpServlet {
 
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-    String productId = extractProductId(request);
-    if (isNotADigit(productId)) {
-      forwardToProductNotFoundPage(request, response, productId);
+    String productIdString = extractProductId(request);
+    if (isNotADigit(productIdString)) {
+      redirectToProductNotFoundPage(request, response, productIdString);
       return;
     }
-    Optional<Product> optionalProduct = productDao.getProduct(Long.parseLong(productId));
+    Optional<Product> optionalProduct = productDao.getProduct(Long.parseLong(productIdString));
     if (!optionalProduct.isPresent()) {
-      forwardToProductNotFoundPage(request, response, productId);
+      redirectToProductNotFoundPage(request, response, productIdString);
       return;
     }
     request.setAttribute("product", optionalProduct.get());
@@ -48,37 +55,68 @@ public class ProductDetailsPageServlet extends HttpServlet {
   }
 
   @Override
-  protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+  protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
     String productIdString = extractProductId(request);
     if (isNotADigit(productIdString)) {
-      forwardToProductNotFoundPage(request, response, productIdString);
+      redirectToProductNotFoundPage(request, response, productIdString);
       return;
     }
     long productId = Long.parseLong(productIdString);
 
     Optional<Product> productOptional = productDao.getProduct(productId);
     if (!productOptional.isPresent()) {
-      forwardToProductNotFoundPage(request, response, productIdString);
+      redirectToProductNotFoundPage(request, response, productIdString);
       return;
     }
     Product product = productOptional.get();
 
     String quantityString = request.getParameter("quantity");
+    if (quantityString == null) {
+      response.sendRedirect(request.getContextPath()
+              + "/products/"
+              + productId
+              + "?error=You haven't specified a quantity");
+      return;
+    }
+
     int quantity;
     try {
       quantity = parseQuantityAccordingToLocale(request.getLocale(), quantityString);
     } catch (ParseException e) {
-      request.setAttribute("error", "Not a number");
-      response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-      doGet(request, response);
+      response.sendRedirect(request.getContextPath()
+              + "/products/"
+              + productId
+              + "?error=Not a number");
+      return;
+    }
+
+    if (quantity <= 0) {
+      response.sendRedirect(request.getContextPath()
+              + "/products/"
+              + productId
+              + "?error=Quantity must be more than 0");
       return;
     }
 
     if (quantity > product.getStock()) {
-      request.setAttribute("error", "Out of stock. Available: " + product.getStock());
-      response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-      doGet(request, response);
+      response.sendRedirect(request.getContextPath()
+              + "/products/"
+              + productId
+              + "?error=Out of stock. Available:"
+              + (product.getStock()));
+      return;
+    }
+
+    Optional<CartItem> optionalCartItem = cartService.getCart(request).getCartItemByProductId(productId);
+    if (optionalCartItem.isPresent()
+            && quantitySumInCartWillBeMoreThanStock(optionalCartItem.get(), quantity, product.getStock())) {
+      response.sendRedirect(request.getContextPath()
+              + "/products/"
+              + productId
+              + "?error=Out of stock. "
+              + (product.getStock() - optionalCartItem.get().getQuantity())
+              + " more available.");
       return;
     }
 
@@ -94,31 +132,38 @@ public class ProductDetailsPageServlet extends HttpServlet {
     return !string.matches("\\d+");
   }
 
+  private void redirectToProductNotFoundPage(HttpServletRequest request,
+                                             HttpServletResponse response,
+                                             String productIdString) throws IOException {
+    response.sendRedirect(request.getContextPath()
+            + "/product-not-found"
+            + "?productId="
+            + productIdString);
+  }
+
   private int parseQuantityAccordingToLocale(Locale locale, String quantityString) throws ParseException {
     NumberFormat format = NumberFormat.getInstance(locale);
     return format.parse(quantityString).intValue();
   }
 
-  private void forwardToProductNotFoundPage(HttpServletRequest request,
-                                            HttpServletResponse response,
-                                            String productIdString) throws ServletException, IOException {
-    request.setAttribute("productId", productIdString);
-    response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-    request.getRequestDispatcher("/WEB-INF/pages/errorProductNotFound.jsp").forward(request, response);
-  }
-
   private void putProductToRecentlyViewedBlock(Product product, HttpSession session) {
-    Deque<Product> recentlyViewedProducts = (Deque<Product>) session.getAttribute(RECENTLY_VIEWED_PRODUCTS_ATTRIBUTE);
-    if (recentlyViewedProducts == null) {
-      recentlyViewedProducts = new ArrayDeque<>(3);
-      session.setAttribute(RECENTLY_VIEWED_PRODUCTS_ATTRIBUTE, recentlyViewedProducts);
-    }
+    Lock sessionLock = sessionLockManager.getSessionLock(session, LOCK_SESSION_ATTRIBUTE);
+    sessionLock.lock();
+    try {
+      Deque<Product> recentlyViewedProducts = (Deque<Product>) session.getAttribute(RECENTLY_VIEWED_PRODUCTS_ATTRIBUTE);
+      if (recentlyViewedProducts == null) {
+        recentlyViewedProducts = new ConcurrentLinkedDeque<>();
+        session.setAttribute(RECENTLY_VIEWED_PRODUCTS_ATTRIBUTE, recentlyViewedProducts);
+      }
 
-    removeDuplicatesInRecentlyViewedBlock(recentlyViewedProducts, product);
+      removeDuplicatesInRecentlyViewedBlock(recentlyViewedProducts, product);
 
-    recentlyViewedProducts.addFirst(product);
-    if (recentlyViewedProducts.size() == 4) {
-      recentlyViewedProducts.pollLast();
+      recentlyViewedProducts.addFirst(product);
+      if (recentlyViewedProducts.size() == 4) {
+        recentlyViewedProducts.pollLast();
+      }
+    } finally {
+      sessionLock.unlock();
     }
   }
 
@@ -130,5 +175,9 @@ public class ProductDetailsPageServlet extends HttpServlet {
         break;
       }
     }
+  }
+
+  private boolean quantitySumInCartWillBeMoreThanStock(CartItem cartItem, int quantity, int stock) {
+    return cartItem.getQuantity() + quantity > stock;
   }
 }
