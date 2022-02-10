@@ -50,25 +50,33 @@ public class DefaultCartService implements CartService {
     Lock sessionLock = sessionLockManager.getSessionLock(session, LOCK_SESSION_ATTRIBUTE);
     sessionLock.lock();
     try {
-      Optional<Product> productOptional = productDao.getProduct(productId);
-      Optional<CartItem> cartItemOptional = cart.getCartItemByProductId(productId);
+      CartItem existedCartItem = getExistedOrAddNewCartItem(cart, productId, quantity);
 
-      if (!productOptional.isPresent()) {
+      if (existedCartItem == null) {
         return;
       }
-      Product product = productOptional.get();
 
-      if (!cartItemOptional.isPresent()) {
-        cart.getItems().add(new CartItem(product, quantity));
-        return;
-      }
-      CartItem cartItem = cartItemOptional.get();
-
-      if (quantitySumInCartWillBeMoreThanStock(cartItem, quantity, product.getStock())) {
-        throw new QuantitySumInCartWillBeMoreThanStockException(cartItem.getQuantity());
+      if (quantitySumInCartWillBeMoreThanStock(existedCartItem, quantity, existedCartItem.getProduct().getStock())) {
+        throw new QuantitySumInCartWillBeMoreThanStockException(existedCartItem.getQuantity());
       }
 
-      cartItem.increaseQuantity(quantity);
+      existedCartItem.increaseQuantity(quantity);
+
+    } finally {
+      sessionLock.unlock();
+    }
+  }
+
+  @Override
+  public void update(Cart cart, Long productId, int quantity, HttpSession session) {
+    Lock sessionLock = sessionLockManager.getSessionLock(session, LOCK_SESSION_ATTRIBUTE);
+    sessionLock.lock();
+    try {
+      CartItem existedCartItem = getExistedOrAddNewCartItem(cart, productId, quantity);
+
+      if (existedCartItem != null) {
+        existedCartItem.setQuantity(quantity);
+      }
 
     } finally {
       sessionLock.unlock();
@@ -77,5 +85,21 @@ public class DefaultCartService implements CartService {
 
   private boolean quantitySumInCartWillBeMoreThanStock(CartItem cartItem, int quantity, int stock) {
     return cartItem.getQuantity() + quantity > stock;
+  }
+
+  private CartItem getExistedOrAddNewCartItem(Cart cart, Long productId, int quantity) {
+    Optional<Product> productOptional = productDao.getProduct(productId);
+    Optional<CartItem> cartItemOptional = cart.getCartItemByProductId(productId);
+
+    if (!productOptional.isPresent()) {
+      return null;
+    }
+    Product product = productOptional.get();
+
+    if (!cartItemOptional.isPresent()) {
+      cart.getItems().add(new CartItem(product, quantity));
+      return null;
+    }
+    return cartItemOptional.get();
   }
 }
