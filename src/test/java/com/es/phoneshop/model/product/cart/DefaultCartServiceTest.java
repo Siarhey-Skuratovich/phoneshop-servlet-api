@@ -3,6 +3,7 @@ package com.es.phoneshop.model.product.cart;
 import com.es.phoneshop.model.product.ArrayListProductDao;
 import com.es.phoneshop.model.product.Product;
 import com.es.phoneshop.model.product.ProductDao;
+import com.es.phoneshop.model.product.cart.exception.QuantitySumInCartWillBeMoreThanStockException;
 import com.es.phoneshop.web.DemoDataServletContextListener;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,7 +53,7 @@ public class DefaultCartServiceTest {
   }
 
   @Test
-  public void testAddingNewProductInCart() {
+  public void testAddingNewProductInCart() throws QuantitySumInCartWillBeMoreThanStockException {
     long productId = 3L;
     cartService.add(cart,productId, 1, session);
     Optional<CartItem> optionalCartItem = cartService.getCart(request).getCartItemByProductId(productId);
@@ -60,7 +61,7 @@ public class DefaultCartServiceTest {
   }
 
   @Test
-  public void testAddingExistingProduct() {
+  public void testAddingExistingProduct() throws QuantitySumInCartWillBeMoreThanStockException {
     long productId = 5L;
     cartService.add(cart,productId, 1, session);
     cartService.add(cart,productId, 1, session);

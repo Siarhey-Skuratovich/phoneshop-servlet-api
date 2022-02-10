@@ -3,6 +3,7 @@ package com.es.phoneshop.model.product.cart;
 import com.es.phoneshop.model.product.ArrayListProductDao;
 import com.es.phoneshop.model.product.Product;
 import com.es.phoneshop.model.product.ProductDao;
+import com.es.phoneshop.model.product.cart.exception.QuantitySumInCartWillBeMoreThanStockException;
 import com.es.phoneshop.util.lock.DefaultSessionLockManager;
 import com.es.phoneshop.util.lock.SessionLockManager;
 
@@ -45,19 +46,36 @@ public class DefaultCartService implements CartService {
   }
 
   @Override
-  public void add(Cart cart, Long productId, int quantity, HttpSession session) {
+  public void add(Cart cart, Long productId, int quantity, HttpSession session) throws QuantitySumInCartWillBeMoreThanStockException {
     Lock sessionLock = sessionLockManager.getSessionLock(session, LOCK_SESSION_ATTRIBUTE);
     sessionLock.lock();
     try {
+      Optional<Product> productOptional = productDao.getProduct(productId);
       Optional<CartItem> cartItemOptional = cart.getCartItemByProductId(productId);
-      if (cartItemOptional.isPresent()) {
-        cartItemOptional.get().increaseQuantity(quantity);
+
+      if (!productOptional.isPresent()) {
         return;
       }
-      Optional<Product> productOptional = productDao.getProduct(productId);
-      productOptional.ifPresent(product -> cart.getItems().add(new CartItem(product, quantity)));
+      Product product = productOptional.get();
+
+      if (!cartItemOptional.isPresent()) {
+        cart.getItems().add(new CartItem(product, quantity));
+        return;
+      }
+      CartItem cartItem = cartItemOptional.get();
+
+      if (quantitySumInCartWillBeMoreThanStock(cartItem, quantity, product.getStock())) {
+        throw new QuantitySumInCartWillBeMoreThanStockException(cartItem.getQuantity());
+      }
+
+      cartItem.increaseQuantity(quantity);
+
     } finally {
       sessionLock.unlock();
     }
+  }
+
+  private boolean quantitySumInCartWillBeMoreThanStock(CartItem cartItem, int quantity, int stock) {
+    return cartItem.getQuantity() + quantity > stock;
   }
 }
