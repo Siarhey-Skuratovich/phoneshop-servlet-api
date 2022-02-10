@@ -3,9 +3,9 @@ package com.es.phoneshop.web;
 import com.es.phoneshop.model.product.ArrayListProductDao;
 import com.es.phoneshop.model.product.Product;
 import com.es.phoneshop.model.product.ProductDao;
-import com.es.phoneshop.model.product.cart.CartItem;
 import com.es.phoneshop.model.product.cart.CartService;
 import com.es.phoneshop.model.product.cart.DefaultCartService;
+import com.es.phoneshop.model.product.cart.exception.QuantitySumInCartWillBeMoreThanStockException;
 import com.es.phoneshop.util.lock.DefaultSessionLockManager;
 import com.es.phoneshop.util.lock.SessionLockManager;
 
@@ -108,19 +108,18 @@ public class ProductDetailsPageServlet extends HttpServlet {
       return;
     }
 
-    Optional<CartItem> optionalCartItem = cartService.getCart(request).getCartItemByProductId(productId);
-    if (optionalCartItem.isPresent()
-            && quantitySumInCartWillBeMoreThanStock(optionalCartItem.get(), quantity, product.getStock())) {
+    try {
+      cartService.add(cartService.getCart(request), productId, quantity, request.getSession());
+    } catch (QuantitySumInCartWillBeMoreThanStockException e) {
       response.sendRedirect(request.getContextPath()
               + "/products/"
               + productId
               + "?error=Out of stock. "
-              + (product.getStock() - optionalCartItem.get().getQuantity())
+              + (product.getStock() - e.getCurrentCartItemQuantity())
               + " more available.");
       return;
     }
 
-    cartService.add(cartService.getCart(request), productId, quantity, request.getSession());
     response.sendRedirect(request.getContextPath() + "/products/" + productId + "?message=Product added to cart");
   }
 
@@ -175,9 +174,5 @@ public class ProductDetailsPageServlet extends HttpServlet {
         break;
       }
     }
-  }
-
-  private boolean quantitySumInCartWillBeMoreThanStock(CartItem cartItem, int quantity, int stock) {
-    return cartItem.getQuantity() + quantity > stock;
   }
 }
