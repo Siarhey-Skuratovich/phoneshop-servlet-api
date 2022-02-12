@@ -20,7 +20,6 @@ import java.util.Currency;
 import java.util.Locale;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;

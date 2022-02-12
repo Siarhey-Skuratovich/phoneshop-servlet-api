@@ -11,4 +11,6 @@ public interface CartService {
   void add(Cart cart, Long productId, int quantity, HttpSession session) throws QuantitySumInCartWillBeMoreThanStockException;
 
   void update(Cart cart, Long productId, int quantity, HttpSession session);
+
+  void delete(Cart cart, Long productId, HttpSession session);
 }

@@ -9,9 +9,9 @@
       ${cart}
   </p>
   <c:if test="${not empty param.successMessage}">
-    <div class="success">
+    <p class="success">
         ${param.successMessage}
-    </div>
+    </p>
   </c:if>
   <c:if test="${not empty param.UrlParamError}">
     <p class="error">
@@ -68,11 +68,19 @@
               </div>
             </c:if>
           </td>
+          <td>
+            <button form="deleteCartItem"
+                    formaction="${pageContext.servletContext.contextPath}/cart/deleteCartItem/${item.product.id}">
+              Delete
+            </button>
+          </td>
         </tr>
       </c:forEach>
     </table>
     <p>
       <button>Update</button>
     </p>
+  </form>
+  <form id="deleteCartItem" method="post">
   </form>
 </tags:master>
