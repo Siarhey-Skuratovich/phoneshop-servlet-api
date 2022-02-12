@@ -55,7 +55,7 @@ public class DefaultCartServiceTest {
   @Test
   public void testAddingNewProductInCart() throws QuantitySumInCartWillBeMoreThanStockException {
     long productId = 3L;
-    cartService.add(cart,productId, 1, session);
+    cartService.add(cart, productId, 1, session);
     Optional<CartItem> optionalCartItem = cartService.getCart(request).getCartItemByProductId(productId);
     assertTrue(optionalCartItem.isPresent());
   }
@@ -63,8 +63,8 @@ public class DefaultCartServiceTest {
   @Test
   public void testAddingExistingProduct() throws QuantitySumInCartWillBeMoreThanStockException {
     long productId = 5L;
-    cartService.add(cart,productId, 1, session);
-    cartService.add(cart,productId, 1, session);
+    cartService.add(cart, productId, 1, session);
+    cartService.add(cart, productId, 1, session);
     Optional<CartItem> optionalCartItem = cartService.getCart(request).getCartItemByProductId(productId);
     assertEquals(2, optionalCartItem.get().getQuantity());
 
@@ -72,6 +72,18 @@ public class DefaultCartServiceTest {
     assertEquals(1, cartService.getCart(request).getItems().stream()
             .filter(item -> item.getProduct().getCode().equals(product.getCode()))
             .count());
+  }
+
+  @Test
+  public void testDeletingProduct() throws QuantitySumInCartWillBeMoreThanStockException {
+    long productId = 5L;
+    cartService.add(cart, productId, 1, session);
+    assertEquals(1, cartService.getCart(request).getItems().size());
+    assertEquals(1, cart.getItems().stream().filter(cartItem -> productId == cartItem.getProduct().getId()).count());
+
+    cartService.delete(cart, productId, session);
+    assertEquals(0, cartService.getCart(request).getItems().size());
+    assertEquals(0, cart.getItems().stream().filter(cartItem -> productId == cartItem.getProduct().getId()).count());
   }
 
 }

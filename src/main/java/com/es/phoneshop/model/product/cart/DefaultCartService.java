@@ -83,6 +83,18 @@ public class DefaultCartService implements CartService {
     }
   }
 
+  @Override
+  public void delete(Cart cart, Long productId, HttpSession session) {
+    Lock sessionLock = sessionLockManager.getSessionLock(session, LOCK_SESSION_ATTRIBUTE);
+    sessionLock.lock();
+    try {
+      cart.getItems().removeIf(cartItem -> productId.equals(cartItem.getProduct().getId()));
+
+    } finally {
+      sessionLock.unlock();
+    }
+  }
+
   private boolean quantitySumInCartWillBeMoreThanStock(CartItem cartItem, int quantity, int stock) {
     return cartItem.getQuantity() + quantity > stock;
   }
