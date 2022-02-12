@@ -8,7 +8,22 @@
   <p>
       ${cart}
   </p>
-  <form method="post">
+  <c:if test="${not empty param.successMessage}">
+    <div class="success">
+        ${param.successMessage}
+    </div>
+  </c:if>
+  <c:if test="${not empty param.UrlParamError}">
+    <p class="error">
+        ${param.UrlParamError}
+    </p>
+  </c:if>
+  <c:if test="${not empty validationErrors}">
+    <p class="error">
+      There were errors updating the cart:
+    </p>
+  </c:if>
+  <form method="post" action="${pageContext.servletContext.contextPath}/cart">
     <table>
       <thead>
       <tr>
@@ -24,7 +39,7 @@
         </td>
       </tr>
       </thead>
-      <c:forEach var="item" items="${cart.items}">
+      <c:forEach var="item" items="${cart.items}" varStatus="status">
         <tr>
           <td>
             <img class="product-tile"
@@ -41,10 +56,17 @@
                                 currencySymbol="${item.product.currency.symbol}"/>
             </a>
           </td>
-          <td>
+          <td class="quantity">
             <fmt:formatNumber value="${item.quantity}" var="quantity"/>
-            <input name="quantity" value="${quantity}" class="quantity"/>
+            <c:set var="error" value="${validationErrors[item.product.id]}"/>
+            <input name="quantity" value="${not empty error ? paramValues['quantity'][status.index] : quantity}"
+                   class="quantity"/>
             <input name="productId" type="hidden" value="${item.product.id}">
+            <c:if test="${not empty error}">
+              <div class="error">
+                  ${error}
+              </div>
+            </c:if>
           </td>
         </tr>
       </c:forEach>
