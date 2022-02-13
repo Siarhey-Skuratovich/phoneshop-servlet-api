@@ -15,6 +15,8 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import java.math.BigDecimal;
+import java.util.Currency;
 import java.util.Optional;
 
 import static org.junit.Assert.*;
@@ -86,4 +88,38 @@ public class DefaultCartServiceTest {
     assertEquals(0, cart.getItems().stream().filter(cartItem -> productId == cartItem.getProduct().getId()).count());
   }
 
+  @Test
+  public void testUpdatingCartItemQuantity() throws QuantitySumInCartWillBeMoreThanStockException {
+    long productId = 5L;
+    cartService.add(cart, productId, 1, session);
+    assertEquals(1, cartService.getCart(request).getCartItemByProductId(productId).get().getQuantity());
+
+    cartService.update(cart, productId, 3, session);
+    assertEquals(3, cartService.getCart(request).getCartItemByProductId(productId).get().getQuantity());
+  }
+
+  @Test
+  public void testRecalculatingTotalPriceAndQuantity() throws QuantitySumInCartWillBeMoreThanStockException {
+    assertEquals(0, cart.getTotalQuantity());
+    assertEquals(0, cart.getTotalCostsMap().size());
+    long productId1 = 5L;
+    cartService.add(cart, productId1, 2, session);
+    cartService.add(cart, productId1 + 1, 1, session);
+    cartService.add(cart, 13L, 2, session);
+
+    Product product1 = productDao.getProduct(productId1).get();
+    Product product2 = productDao.getProduct(productId1 + 1).get();
+    Product product3 = productDao.getProduct(13L).get();
+
+
+    assertEquals(5, cart.getTotalQuantity());
+
+    Currency usd = Currency.getInstance("USD");
+    assertEquals(product1.getPrice().multiply(BigDecimal.valueOf(2)).add(product2.getPrice()),
+            cart.getTotalCostsMap().get(usd));
+
+    Currency rub = Currency.getInstance("RUB");
+    assertEquals(product3.getPrice().multiply(BigDecimal.valueOf(2)),
+            cart.getTotalCostsMap().get(rub));
+  }
 }

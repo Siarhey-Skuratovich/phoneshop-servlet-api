@@ -33,6 +33,7 @@ public class DemoDataServletContextListener implements ServletContextListener {
 
   private void saveSampleProducts() {
     Currency usd = Currency.getInstance("USD");
+
     productDao.save(new Product("sgs", "Samsung Galaxy S", new BigDecimal(100), usd, 100, "manufacturer/Samsung/Samsung%20Galaxy%20S.jpg"));
     productDao.save(new Product("sgs2", "Samsung Galaxy S II", new BigDecimal(200), usd, 0, "manufacturer/Samsung/Samsung%20Galaxy%20S%20II.jpg"));
     productDao.save(new Product("sgs3", "Samsung Galaxy S III", new BigDecimal(300), usd, 5, "manufacturer/Samsung/Samsung%20Galaxy%20S%20III.jpg"));
@@ -46,6 +47,8 @@ public class DemoDataServletContextListener implements ServletContextListener {
     productDao.save(new Product("simc56", "Siemens C56", new BigDecimal(70), usd, 20, "manufacturer/Siemens/Siemens%20C56.jpg"));
     productDao.save(new Product("simc61", "Siemens C61", new BigDecimal(80), usd, 30, "manufacturer/Siemens/Siemens%20C61.jpg"));
     productDao.save(new Product("simsxg75", "Siemens SXG75", new BigDecimal(150), usd, 40, "manufacturer/Siemens/Siemens%20SXG75.jpg"));
+    productDao.save(new Product("WAS-LX1", "Huawei P10 Lite", new BigDecimal(600), Currency.getInstance("RUB"), 10, null));
+    productDao.save(new Product("alctl-1s", "Alcatel 1s", new BigDecimal(400), Currency.getInstance("EUR"), 10, null));
   }
 
   private void changePricesForVisibleDemoData() {

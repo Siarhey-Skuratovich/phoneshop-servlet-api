@@ -9,8 +9,10 @@ import com.es.phoneshop.util.lock.SessionLockManager;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-import java.util.Optional;
+import java.math.BigDecimal;
+import java.util.*;
 import java.util.concurrent.locks.Lock;
+import java.util.stream.Collectors;
 
 public class DefaultCartService implements CartService {
   private static final String CART_SESSION_ATTRIBUTE = DefaultCartService.class.getName() + ".cart";
@@ -61,8 +63,8 @@ public class DefaultCartService implements CartService {
       }
 
       existedCartItem.increaseQuantity(quantity);
-
     } finally {
+      recalculateCart(cart);
       sessionLock.unlock();
     }
   }
@@ -79,6 +81,7 @@ public class DefaultCartService implements CartService {
       }
 
     } finally {
+      recalculateCart(cart);
       sessionLock.unlock();
     }
   }
@@ -89,8 +92,8 @@ public class DefaultCartService implements CartService {
     sessionLock.lock();
     try {
       cart.getItems().removeIf(cartItem -> productId.equals(cartItem.getProduct().getId()));
-
     } finally {
+      recalculateCart(cart);
       sessionLock.unlock();
     }
   }
@@ -113,5 +116,25 @@ public class DefaultCartService implements CartService {
       return null;
     }
     return cartItemOptional.get();
+  }
+
+  private void recalculateCart(Cart cart) {
+    cart.setTotalCostsMap(getTotalCostsMap(cart));
+    cart.setTotalQuantity(cart.getItems().stream().mapToInt(CartItem::getQuantity).sum());
+  }
+
+
+  private Map<Currency, BigDecimal> getTotalCostsMap(Cart cart) {
+    return cart.getItems().stream()
+            .collect(Collectors.groupingBy(cartItem -> cartItem
+                            .getProduct()
+                            .getCurrency(),
+                    Collectors.reducing(BigDecimal.valueOf(0),
+                            cartItem -> cartItem
+                                    .getProduct()
+                                    .getPrice()
+                                    .multiply(BigDecimal.valueOf(cartItem.getQuantity())),
+                            BigDecimal::add)));
+
   }
 }

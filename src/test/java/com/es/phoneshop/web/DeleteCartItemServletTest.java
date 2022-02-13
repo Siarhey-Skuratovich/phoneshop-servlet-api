@@ -29,8 +29,6 @@ public class DeleteCartItemServletTest {
   @Mock
   private HttpServletResponse response;
   @Mock
-  private RequestDispatcher requestDispatcher;
-  @Mock
   private ServletConfig config;
   @Mock
   private HttpSession session;
@@ -63,7 +61,7 @@ public class DeleteCartItemServletTest {
   }
 
   @Test
-  public void testDoPostWithInvalidId() throws IOException, ServletException {
+  public void testDoPostWithInvalidId() throws IOException {
     String productId = "asd";
     when(request.getPathInfo()).thenReturn("/" + productId);
     servlet.doPost(request, response);
