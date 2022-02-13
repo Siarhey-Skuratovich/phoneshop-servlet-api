@@ -12,6 +12,12 @@ header img {
   max-width: 64px;
 }
 
+.miniCart {
+  font-size: x-large;
+  font-family: sans-serif;
+  text-shadow: none;
+}
+
 table {
   border-collapse: collapse;
   border : 1px solid gray;
