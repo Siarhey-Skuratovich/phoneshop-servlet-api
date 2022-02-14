@@ -1,18 +1,28 @@
 package com.es.phoneshop.web;
 
+import com.es.phoneshop.model.product.ArrayListProductDao;
+import com.es.phoneshop.model.product.Product;
+import com.es.phoneshop.model.product.ProductDao;
+import com.es.phoneshop.model.product.cart.Cart;
+import com.es.phoneshop.model.product.cart.CartService;
+import com.es.phoneshop.model.product.cart.DefaultCartService;
+import com.es.phoneshop.model.product.cart.exception.QuantitySumInCartWillBeMoreThanStockException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
+import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.*;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -21,29 +31,194 @@ import static org.mockito.Mockito.any;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ProductListPageServletTest {
-    @Mock
-    private HttpServletRequest request;
-    @Mock
-    private HttpServletResponse response;
-    @Mock
-    private RequestDispatcher requestDispatcher;
-    @Mock
-    private ServletConfig config;
 
-    private final ProductListPageServlet servlet = new ProductListPageServlet();
+  @Mock
+  private HttpServletRequest request;
+  @Mock
+  private HttpServletResponse response;
+  @Mock
+  private RequestDispatcher requestDispatcher;
+  @Mock
+  private ServletConfig config;
+  @Mock
+  private ServletContextEvent event;
+  @Mock
+  private ServletContext servletContext;
+  @Mock
+  private HttpSession session;
 
-    @Before
-    public void setup() throws ServletException {
-        servlet.init(config);
-        when(request.getRequestDispatcher(anyString())).thenReturn(requestDispatcher);
+  private ProductDao productDao;
+
+  private final CartService cartService = DefaultCartService.getInstance();
+
+  private final Cart cart = new Cart();
+
+  private final ProductListPageServlet servlet = new ProductListPageServlet();
+
+  @Before
+  public void setup() throws ServletException {
+    productDao = ArrayListProductDao.getInstance();
+    boolean productArrayIsEmpty = productDao.findProducts(null, null, null).isEmpty();
+
+    if (productArrayIsEmpty) {
+      DemoDataServletContextListener demoDataServletContextListener = new DemoDataServletContextListener();
+      when(event.getServletContext()).thenReturn(servletContext);
+      when(servletContext.getInitParameter("insertDemoData")).thenReturn("true");
+      demoDataServletContextListener.contextInitialized(event);
     }
+    servlet.init(config);
+    when(request.getRequestDispatcher(anyString())).thenReturn(requestDispatcher);
 
-    @Test
-    public void testDoGet() throws ServletException, IOException {
-        servlet.doGet(request, response);
+    when(request.getSession()).thenReturn(session);
+    when(session.getAttribute(DefaultCartService.class.getName() + ".cart")).thenReturn(cart);
+    when(request.getLocale()).thenReturn(Locale.ENGLISH);
+  }
 
-        verify(request).setAttribute(eq("products"), any());
-        verify(request).getRequestDispatcher(eq("/WEB-INF/pages/productList.jsp"));
-        verify(requestDispatcher).forward(request, response);
-    }
+  @Test
+  public void testDoGet() throws ServletException, IOException {
+    servlet.doGet(request, response);
+
+    verify(request).setAttribute(eq("products"), any());
+    verify(request).getRequestDispatcher(eq("/WEB-INF/pages/productList.jsp"));
+    verify(requestDispatcher).forward(request, response);
+  }
+
+  @Test
+  public void testDoPostWithInvalidId() throws IOException {
+    String productId = "asd";
+    when(request.getParameterValues("productId")).thenReturn(new String[]{productId});
+    servlet.doPost(request, response);
+
+    verify(response).sendRedirect(request.getContextPath()
+            + "/product-not-found"
+            + "?productId="
+            + productId);
+  }
+
+  @Test
+  public void testDoPostWithNotExistingId() throws IOException {
+    long productId = 46L;
+    when(request.getParameterValues("productId")).thenReturn(new String[]{String.valueOf(productId)});
+    servlet.doPost(request, response);
+
+    verify(response).sendRedirect(request.getContextPath()
+            + "/product-not-found"
+            + "?productId="
+            + productId);
+    assertFalse(cartService.getCart(request).getCartItemByProductId(productId).isPresent());
+  }
+
+  @Test
+  public void testDoPostWithInvalidQuantity() throws IOException {
+    long productId = 6L;
+    String quantityString = "asd";
+    when(request.getParameterValues("productId")).thenReturn(new String[]{String.valueOf(productId)});
+    when(request.getParameterValues("quantity")).thenReturn(new String[]{quantityString});
+    servlet.doPost(request, response);
+
+    verify(response).sendRedirect("null?&error=Not a number");
+    assertFalse(cartService.getCart(request).getCartItemByProductId(productId).isPresent());
+  }
+
+  @Test
+  public void testDoPostWithQuantityMoreThanStock() throws IOException {
+    long productId = 6L;
+    String quantityString = "1000";
+    Product product = productDao.getProduct(productId).get();
+    when(request.getParameterValues("productId")).thenReturn(new String[]{String.valueOf(productId)});
+    when(request.getParameterValues("quantity")).thenReturn(new String[]{quantityString});
+    servlet.doPost(request, response);
+
+    verify(response).sendRedirect("null?&error=Out of stock. Available:" + product.getStock());
+    assertFalse(cartService.getCart(request).getCartItemByProductId(productId).isPresent());
+  }
+
+  @Test
+  public void testDoPostWithValidAndExistingValues() throws IOException {
+    long productId = 5L;
+    String quantityString = "3";
+    when(request.getParameterValues("productId")).thenReturn(new String[]{String.valueOf(productId)});
+    when(request.getParameterValues("quantity")).thenReturn(new String[]{quantityString});
+    servlet.doPost(request, response);
+
+    verify(response).sendRedirect(any());
+    assertTrue(cartService.getCart(request).getCartItemByProductId(productId).isPresent());
+  }
+
+  @Test
+  public void testDoPostWithQuantityConveyedAccordingToEnglishLocale() throws IOException {
+    Product newProduct = new Product("WAS-LX1",
+            "Huawei P10 Lite",
+            new BigDecimal(100),
+            Currency.getInstance("USD"),
+            10000,
+            null);
+    productDao.save(newProduct);
+    when(request.getParameterValues("productId")).thenReturn(new String[]{String.valueOf(newProduct.getId())});
+    when(request.getParameterValues("quantity")).thenReturn(new String[]{"1,000"});
+    servlet.doPost(request, response);
+
+    verify(response).sendRedirect(any());
+    assertTrue(cartService.getCart(request).getCartItemByProductId(newProduct.getId()).isPresent());
+  }
+
+  @Test
+  public void testDoPostIfQuantitySumInCartWillBeMoreThanStock() throws IOException, QuantitySumInCartWillBeMoreThanStockException {
+    long productId = 6L;
+    Product product = productDao.getProduct(productId).get();
+    when(request.getParameterValues("productId")).thenReturn(new String[]{String.valueOf(productId)});
+
+    cartService.add(cart, productId, 3, session);
+
+    when(request.getParameterValues("quantity")).thenReturn(new String[]{"30"});
+    servlet.doPost(request, response);
+
+    verify(response).sendRedirect("null?&error=Out of stock. "
+            + (product.getStock() - cartService.getCart(request).getCartItemByProductId(productId).get().getQuantity())
+            + " more available.");
+  }
+
+  @Test
+  public void testDoPostIfQuantityLessThan0() throws IOException {
+    long productId = 6L;
+    String quantityString = "-3";
+    when(request.getParameterValues("productId")).thenReturn(new String[]{String.valueOf(productId)});
+    when(request.getParameterValues("quantity")).thenReturn(new String[]{quantityString});
+    servlet.doPost(request, response);
+
+    verify(response).sendRedirect("null?&error=Quantity must be more than 0");
+  }
+
+  @Test
+  public void testDoPostIfQuantityIsNull() throws IOException {
+    long productId = 6L;
+    when(request.getParameterValues("productId")).thenReturn(new String[]{String.valueOf(productId)});
+    when(request.getParameterValues("quantity")).thenReturn(new String[]{null});
+    servlet.doPost(request, response);
+
+    verify(response).sendRedirect("null?&error=You haven't specified a quantity");
+  }
+
+  @Test
+  public void testDoPostForSortingParams() throws IOException {
+    long productId = 9L;
+    String quantityString = "3";
+    when(request.getParameterValues("productId")).thenReturn(new String[]{String.valueOf(productId)});
+    when(request.getParameterValues("quantity")).thenReturn(new String[]{quantityString});
+
+    Map<String, String[]> params = new LinkedHashMap<>();
+    params.put("sort", new String[]{"description"});
+    params.put("order", new String[]{"asc"});
+    params.put("query", new String[]{""});
+    params.put("quantity", new String[]{quantityString});
+    params.put("productId", new String[]{String.valueOf(productId)});
+
+    when(request.getParameterMap()).thenReturn(params);
+    when(request.getRequestURI()).thenReturn("/phoneshop-servlet-api/products");
+    servlet.doPost(request, response);
+
+    verify(response).sendRedirect("/phoneshop-servlet-api/products?" +
+            "sort=description&order=asc&query=&quantity=3&productId=9&successMessage=Product added to cart");
+    assertTrue(cartService.getCart(request).getCartItemByProductId(productId).isPresent());
+  }
 }

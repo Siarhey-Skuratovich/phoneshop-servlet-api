@@ -11,11 +11,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.text.NumberFormat;
 import java.text.ParseException;
-import java.util.*;
+import java.util.Locale;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class ProductListPageServlet extends HttpServlet {
@@ -117,7 +116,7 @@ public class ProductListPageServlet extends HttpServlet {
             + productIdString);
   }
 
-  private String prepareRedirectURL(HttpServletRequest request, String message) {
+  private String prepareRedirectURL(HttpServletRequest request, String messageParam) {
     String params = request.getParameterMap().entrySet().stream()
             .filter(entry -> !entry.getKey().matches("successMessage|error"))
             .map(entry -> entry.getKey() + "=" + entry.getValue()[entry.getValue().length - 1])
@@ -126,6 +125,6 @@ public class ProductListPageServlet extends HttpServlet {
     return request.getRequestURI()
             + "?"
             + params
-            + message;
+            + messageParam;
   }
 }
