@@ -25,7 +25,6 @@ public class ArrayListProductDaoTest {
   @Mock
   private ServletContext servletContext;
 
-
   @Before
   public void setup() {
     productDao = ArrayListProductDao.getInstance();
@@ -88,6 +87,7 @@ public class ArrayListProductDaoTest {
     Product newProduct = new Product("WAS-LX1", "Huawei P10 Lite", null, Currency.getInstance("USD"), 1, null);
     productDao.save(newProduct);
     assertEquals(oldSize, productDao.findProducts(null, null, null).size());
+    productDao.delete(newProduct.getId());
   }
 
   @Test

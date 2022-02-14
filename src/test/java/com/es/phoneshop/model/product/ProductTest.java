@@ -56,9 +56,9 @@ public class ProductTest {
     productDao.save(product);
 
     List<PriceChange> history = productDao.getProduct(3L).get().getPriceChangesHistory();
-    assertEquals(3, history.size());
-    for (int i = 0; i < history.size(); i++) {
-      assertEquals(expectedPrices.get(i), history.get(i).getPrice());
+    assertEquals(5, history.size());
+    for (int i = history.size() - 3; i < history.size(); i++) {
+      assertEquals(expectedPrices.get(i + 3 - history.size()), history.get(i).getPrice());
     }
   }
 }

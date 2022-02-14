@@ -3,7 +3,6 @@ package com.es.phoneshop.web;
 import com.es.phoneshop.model.product.ArrayListProductDao;
 import com.es.phoneshop.model.product.Product;
 import com.es.phoneshop.model.product.ProductDao;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -12,7 +11,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
-
 import java.lang.reflect.*;
 import java.util.List;
 
@@ -28,52 +26,56 @@ public class DemoDataServletContextListenerTest {
 
   private DemoDataServletContextListener demoDataServletContextListener = new DemoDataServletContextListener();
 
-  private ProductDao productDao = ArrayListProductDao.getInstance();
+  private ProductDao productDaoTemp;
 
   @Before
-  public void setUp() {
+  public void createNewInstanceOfSingletonProductDaoUsingReflection() throws NoSuchMethodException, NoSuchFieldException, IllegalAccessException, InvocationTargetException, InstantiationException {
     when(event.getServletContext()).thenReturn(servletContext);
-  }
 
-  @After
-  public void resetProductDao() throws IllegalAccessException, NoSuchMethodException, NoSuchFieldException, InvocationTargetException, InstantiationException {
     Class<ArrayListProductDao> arrayListProductDaoClass = ArrayListProductDao.class;
     Constructor<ArrayListProductDao> arrayListProductDaoClassConstructor = arrayListProductDaoClass.getDeclaredConstructor();
     arrayListProductDaoClassConstructor.setAccessible(true);
 
     Class<?> instanceHolderClass = arrayListProductDaoClass.getDeclaredClasses()[0];
-    Field field = instanceHolderClass.getDeclaredField("instance");
-    field.setAccessible(true);
+    Field instanceField = instanceHolderClass.getDeclaredField("instance");
+    instanceField.setAccessible(true);
 
     Field modifiersField = getModifiersField();
     modifiersField.setAccessible(true);
-    modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+    modifiersField.setInt(instanceField, instanceField.getModifiers() & ~Modifier.FINAL);
 
-    field.set(null, arrayListProductDaoClassConstructor.newInstance());
+    productDaoTemp =  arrayListProductDaoClassConstructor.newInstance();
+
+    Class<DemoDataServletContextListener> demoDataServletContextListenerClass = DemoDataServletContextListener.class;
+    Field productDaoFieldOfContextListener = demoDataServletContextListenerClass.getDeclaredField("productDao");
+    modifiersField.setInt(productDaoFieldOfContextListener, productDaoFieldOfContextListener.getModifiers() & ~Modifier.FINAL);
+    productDaoFieldOfContextListener.setAccessible(true);
+
+    productDaoFieldOfContextListener.set(demoDataServletContextListener, productDaoTemp);
   }
 
   @Test
   public void testIfAttributeInsertDataIsFalse() {
-    int oldSize = productDao.findProducts(null, null, null).size();
+    int oldSize = productDaoTemp.findProducts(null, null, null).size();
     when(servletContext.getInitParameter("insertDemoData")).thenReturn("false");
     demoDataServletContextListener.contextInitialized(event);
-    assertEquals(oldSize, productDao.findProducts(null, null, null).size());
+    assertEquals(oldSize, productDaoTemp.findProducts(null, null, null).size());
   }
 
   @Test
   public void testIfAttributeInsertDataIsTrue() {
-    int oldSize = productDao.findProducts(null, null, null).size();
+    int oldSize = productDaoTemp.findProducts(null, null, null).size();
     when(servletContext.getInitParameter("insertDemoData")).thenReturn("true");
     demoDataServletContextListener.contextInitialized(event);
-    assertTrue(oldSize < productDao.findProducts(null, null, null).size());
-    assertFalse(productDao.findProducts(null, null, null).isEmpty());
+    assertTrue(oldSize < productDaoTemp.findProducts(null, null, null).size());
+    assertFalse(productDaoTemp.findProducts(null, null, null).isEmpty());
   }
 
   @Test
   public void testMultiplePriceChange() {
     when(servletContext.getInitParameter("insertDemoData")).thenReturn("true");
     demoDataServletContextListener.contextInitialized(event);
-    List<Product> products = productDao.findProducts(null, null, null);
+    List<Product> products = productDaoTemp.findProducts(null, null, null);
     assertTrue(products.stream()
             .filter(product -> product.getPriceChangesHistory().size() == 3).count() >= 12);
   }
