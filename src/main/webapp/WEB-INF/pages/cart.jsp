@@ -50,12 +50,6 @@
                 ${item.product.description}
             </a>
           </td>
-          <td class="price">
-            <a href="${pageContext.servletContext.contextPath}/products/price/${item.product.id}">
-              <fmt:formatNumber value="${item.product.price}" type="currency"
-                                currencySymbol="${item.product.currency.symbol}"/>
-            </a>
-          </td>
           <td class="quantity">
             <fmt:formatNumber value="${item.quantity}" var="quantity"/>
             <c:set var="error" value="${validationErrors[item.product.id]}"/>
@@ -67,6 +61,12 @@
                   ${error}
               </div>
             </c:if>
+          </td>
+          <td class="price">
+            <a href="${pageContext.servletContext.contextPath}/products/price/${item.product.id}">
+              <fmt:formatNumber value="${item.product.price}" type="currency"
+                                currencySymbol="${item.product.currency.symbol}"/>
+            </a>
           </td>
           <td>
             <button form="deleteCartItem"

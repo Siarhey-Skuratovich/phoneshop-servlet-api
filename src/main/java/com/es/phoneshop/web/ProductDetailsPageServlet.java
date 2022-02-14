@@ -87,7 +87,8 @@ public class ProductDetailsPageServlet extends HttpServlet {
       response.sendRedirect(request.getContextPath()
               + "/products/"
               + productId
-              + "?error=Not a number");
+              + "?quantity=" + quantityString + "&"
+              + "error=Not a number");
       return;
     }
 
@@ -95,7 +96,8 @@ public class ProductDetailsPageServlet extends HttpServlet {
       response.sendRedirect(request.getContextPath()
               + "/products/"
               + productId
-              + "?error=Quantity must be more than 0");
+              + "?quantity=" + quantityString + "&"
+              + "error=Quantity must be more than 0");
       return;
     }
 
@@ -103,7 +105,8 @@ public class ProductDetailsPageServlet extends HttpServlet {
       response.sendRedirect(request.getContextPath()
               + "/products/"
               + productId
-              + "?error=Out of stock. Available:"
+              + "?quantity=" + quantityString + "&"
+              + "error=Out of stock. Available:"
               + (product.getStock()));
       return;
     }

@@ -107,11 +107,11 @@ public class CartPageServlet extends HttpServlet {
   }
 
   private String getUrlParamErrorMessageIfPresent(String[] productIds, String[] quantities) {
-    if (quantities == null) {
-      return "Missing any required quantity in URL params";
-    }
     if (productIds == null) {
       return "Missing any required productId in URL params";
+    }
+    if (quantities == null) {
+      return "Missing any required quantity in URL params";
     }
     if (productIds.length != quantities.length) {
       return "ProductIds don't match their required quantities in URL params";
