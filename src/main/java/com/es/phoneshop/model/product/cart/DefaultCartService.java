@@ -123,7 +123,6 @@ public class DefaultCartService implements CartService {
     cart.setTotalQuantity(cart.getItems().stream().mapToInt(CartItem::getQuantity).sum());
   }
 
-
   private Map<Currency, BigDecimal> getTotalCostsMap(Cart cart) {
     return cart.getItems().stream()
             .collect(Collectors.groupingBy(cartItem -> cartItem
@@ -135,6 +134,5 @@ public class DefaultCartService implements CartService {
                                     .getPrice()
                                     .multiply(BigDecimal.valueOf(cartItem.getQuantity())),
                             BigDecimal::add)));
-
   }
 }

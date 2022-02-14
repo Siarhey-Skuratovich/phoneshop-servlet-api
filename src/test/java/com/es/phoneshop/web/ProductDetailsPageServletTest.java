@@ -139,29 +139,33 @@ public class ProductDetailsPageServletTest {
   @Test
   public void testDoPostWithInvalidQuantity() throws IOException {
     long productId = 6L;
+    String quantityString = "asd";
     when(request.getPathInfo()).thenReturn("/" + productId);
-    when(request.getParameter("quantity")).thenReturn("asd");
+    when(request.getParameter("quantity")).thenReturn(quantityString);
     servlet.doPost(request, response);
 
     verify(response).sendRedirect(request.getContextPath()
             + "/products/"
             + productId
-            + "?error=Not a number");
+            + "?quantity=" + quantityString + "&"
+            + "error=Not a number");
     assertFalse(cartService.getCart(request).getCartItemByProductId(productId).isPresent());
   }
 
   @Test
   public void testDoPostWithQuantityMoreThanStock() throws IOException {
     long productId = 6L;
+    String quantityString = "1000";
     Product product = productDao.getProduct(productId).get();
     when(request.getPathInfo()).thenReturn("/" + productId);
-    when(request.getParameter("quantity")).thenReturn("1000");
+    when(request.getParameter("quantity")).thenReturn(quantityString);
     servlet.doPost(request, response);
 
     verify(response).sendRedirect(request.getContextPath()
             + "/products/"
             + productId
-            + "?error=Out of stock. Available:"
+            + "?quantity=" + quantityString + "&"
+            + "error=Out of stock. Available:"
             + (product.getStock()));
     assertFalse(cartService.getCart(request).getCartItemByProductId(productId).isPresent());
   }
@@ -254,14 +258,16 @@ public class ProductDetailsPageServletTest {
   @Test
   public void testDoPostIfQuantityLessThan0() throws IOException {
     long productId = 6L;
+    String quantityString = "-3";
     when(request.getPathInfo()).thenReturn("/" + productId);
-    when(request.getParameter("quantity")).thenReturn("-3");
+    when(request.getParameter("quantity")).thenReturn(quantityString);
     servlet.doPost(request, response);
 
     verify(response).sendRedirect(request.getContextPath()
             + "/products/"
             + productId
-            + "?error=Quantity must be more than 0");
+            + "?quantity=" + quantityString + "&"
+            + "error=Quantity must be more than 0");
   }
 
   @Test
