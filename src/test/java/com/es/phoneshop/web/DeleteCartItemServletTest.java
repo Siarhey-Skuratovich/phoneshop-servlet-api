@@ -5,6 +5,7 @@ import com.es.phoneshop.model.product.ProductDao;
 import com.es.phoneshop.model.product.cart.Cart;
 import com.es.phoneshop.model.product.cart.CartService;
 import com.es.phoneshop.model.product.cart.DefaultCartService;
+import com.es.phoneshop.model.product.cart.exception.OutOfStockException;
 import com.es.phoneshop.model.product.cart.exception.QuantitySumInCartWillBeMoreThanStockException;
 import org.junit.Before;
 import org.junit.Test;
@@ -85,7 +86,7 @@ public class DeleteCartItemServletTest {
   }
 
   @Test
-  public void testDoPostWithNoProductInCartWithSuchId() throws IOException, ServletException {
+  public void testDoPostWithNoProductInCartWithSuchId() throws IOException {
     String productId = "3";
     when(request.getPathInfo()).thenReturn("/" + productId);
     servlet.doPost(request, response);
@@ -95,7 +96,7 @@ public class DeleteCartItemServletTest {
   }
 
   @Test
-  public void testDoPostWithValidId() throws IOException, QuantitySumInCartWillBeMoreThanStockException {
+  public void testDoPostWithValidId() throws IOException, QuantitySumInCartWillBeMoreThanStockException, OutOfStockException {
     long productId = 3L;
     Cart cart = cartService.getCart(request);
     cartService.add(cart, productId, 3, session);

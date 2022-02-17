@@ -3,6 +3,7 @@ package com.es.phoneshop.model.product.cart;
 import com.es.phoneshop.model.product.ArrayListProductDao;
 import com.es.phoneshop.model.product.Product;
 import com.es.phoneshop.model.product.ProductDao;
+import com.es.phoneshop.model.product.cart.exception.OutOfStockException;
 import com.es.phoneshop.model.product.cart.exception.QuantitySumInCartWillBeMoreThanStockException;
 import com.es.phoneshop.web.DemoDataServletContextListener;
 import org.junit.Before;
@@ -55,7 +56,7 @@ public class DefaultCartServiceTest {
   }
 
   @Test
-  public void testAddingNewProductInCart() throws QuantitySumInCartWillBeMoreThanStockException {
+  public void testAddingNewProductInCart() throws QuantitySumInCartWillBeMoreThanStockException, OutOfStockException {
     long productId = 3L;
     cartService.add(cart, productId, 1, session);
     Optional<CartItem> optionalCartItem = cartService.getCart(request).getCartItemByProductId(productId);
@@ -63,7 +64,7 @@ public class DefaultCartServiceTest {
   }
 
   @Test
-  public void testAddingExistingProduct() throws QuantitySumInCartWillBeMoreThanStockException {
+  public void testAddingExistingProduct() throws QuantitySumInCartWillBeMoreThanStockException, OutOfStockException {
     long productId = 5L;
     cartService.add(cart, productId, 1, session);
     cartService.add(cart, productId, 1, session);
@@ -77,7 +78,7 @@ public class DefaultCartServiceTest {
   }
 
   @Test
-  public void testDeletingProduct() throws QuantitySumInCartWillBeMoreThanStockException {
+  public void testDeletingProduct() throws QuantitySumInCartWillBeMoreThanStockException, OutOfStockException {
     long productId = 5L;
     cartService.add(cart, productId, 1, session);
     assertEquals(1, cartService.getCart(request).getItems().size());
@@ -89,7 +90,7 @@ public class DefaultCartServiceTest {
   }
 
   @Test
-  public void testUpdatingCartItemQuantity() throws QuantitySumInCartWillBeMoreThanStockException {
+  public void testUpdatingCartItemQuantity() throws QuantitySumInCartWillBeMoreThanStockException, OutOfStockException {
     long productId = 5L;
     cartService.add(cart, productId, 1, session);
     assertEquals(1, cartService.getCart(request).getCartItemByProductId(productId).get().getQuantity());
@@ -99,7 +100,7 @@ public class DefaultCartServiceTest {
   }
 
   @Test
-  public void testRecalculatingTotalPriceAndQuantity() throws QuantitySumInCartWillBeMoreThanStockException {
+  public void testRecalculatingTotalPriceAndQuantity() throws QuantitySumInCartWillBeMoreThanStockException, OutOfStockException {
     assertEquals(0, cart.getTotalQuantity());
     assertEquals(0, cart.getTotalCostsMap().size());
     long productId1 = 5L;

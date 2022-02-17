@@ -14,10 +14,10 @@
   </form>
   <c:if test="${not empty param.successMessage}">
     <p class="success">
-    ${param.successMessage}
+        ${param.successMessage}
     </p>
   </c:if>
-  <c:if test="${not empty param.error}">
+  <c:if test="${not empty error}">
     <p class="error">
       There was an error adding to cart
     </p>
@@ -54,12 +54,13 @@
         </td>
         <td class="quantity">
           <form id="addToCartForm${status.index}" method="post">
-            <input class="quantity" name="quantity" value="${not empty param.error && product.id == param.productId ? param.quantity : 1}">
-            <c:if test="${not empty param.error}">
+            <input class="quantity" name="quantity"
+                   value="${not empty error && product.id == param.productId ? param.quantity : 1}">
+            <c:if test="${not empty error}">
               <c:if test="${product.id == param.productId}">
-              <div class="error">
-                  ${param.error}
-              </div>
+                <div class="error">
+                    ${error}
+                </div>
               </c:if>
             </c:if>
             <input name="productId" type="hidden" value="${product.id}">
@@ -71,7 +72,8 @@
           </a>
         </td>
         <td>
-          <button form="addToCartForm${status.index}">
+          <button form="addToCartForm${status.index}"
+                  formaction="${pageContext.servletContext.contextPath}/products<tags:sortAndFilterParams/>">
             Add to cart
           </button>
         </td>

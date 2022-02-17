@@ -6,6 +6,8 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Cart implements Serializable {
+  private static final long serialVersionUID = -5168977499824515044L;
+
   private int totalQuantity;
   private Map<Currency, BigDecimal> totalCostsMap;
   private final List<CartItem> items;

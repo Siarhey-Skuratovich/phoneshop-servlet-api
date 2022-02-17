@@ -31,11 +31,11 @@
         <td>
           Description
         </td>
-        <td class="price">
-          Price
-        </td>
         <td class="quantity">
           Quantity
+        </td>
+        <td class="price">
+          Price
         </td>
       </tr>
       </thead>

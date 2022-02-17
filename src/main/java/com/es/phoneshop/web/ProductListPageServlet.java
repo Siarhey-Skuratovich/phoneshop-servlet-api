@@ -3,6 +3,7 @@ package com.es.phoneshop.web;
 import com.es.phoneshop.model.product.*;
 import com.es.phoneshop.model.product.cart.CartService;
 import com.es.phoneshop.model.product.cart.DefaultCartService;
+import com.es.phoneshop.model.product.cart.exception.OutOfStockException;
 import com.es.phoneshop.model.product.cart.exception.QuantitySumInCartWillBeMoreThanStockException;
 
 import javax.servlet.ServletConfig;
@@ -15,7 +16,6 @@ import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class ProductListPageServlet extends HttpServlet {
   private ProductDao productDao;
@@ -44,9 +44,12 @@ public class ProductListPageServlet extends HttpServlet {
   }
 
   @Override
-  protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
-    String[] productIds = request.getParameterValues("productId");
-    String productIdString = productIds[productIds.length - 1];
+  protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+    String productIdString = request.getParameter("productId");
+    if (productIdString == null) {
+      redirectToProductNotFoundPage(request, response, null);
+      return;
+    }
 
     if (isNotADigit(productIdString)) {
       redirectToProductNotFoundPage(request, response, productIdString);
@@ -61,10 +64,10 @@ public class ProductListPageServlet extends HttpServlet {
     }
     Product product = productOptional.get();
 
-    String[] quantities = request.getParameterValues("quantity");
-    String quantityString = quantities[quantities.length - 1];
+    String quantityString = request.getParameter("quantity");
     if (quantityString == null) {
-      response.sendRedirect(prepareRedirectURL(request, "&error=You haven't specified a quantity"));
+      request.setAttribute("error", "You haven't specified a quantity");
+      doGet(request, response);
       return;
     }
 
@@ -72,30 +75,32 @@ public class ProductListPageServlet extends HttpServlet {
     try {
       quantity = parseQuantityAccordingToLocale(request.getLocale(), quantityString);
     } catch (ParseException e) {
-      response.sendRedirect(prepareRedirectURL(request, "&error=Not a number"));
+      request.setAttribute("error", "Not a number");
+      doGet(request, response);
       return;
     }
 
     if (quantity <= 0) {
-      response.sendRedirect(prepareRedirectURL(request, "&error=Quantity must be more than 0"));
-      return;
-    }
-
-    if (quantity > product.getStock()) {
-      response.sendRedirect(prepareRedirectURL(request, "&error=Out of stock. Available:" + product.getStock()));
+      request.setAttribute("error", "Quantity must be more than 0");
+      doGet(request, response);
       return;
     }
 
     try {
       cartService.add(cartService.getCart(request), productId, quantity, request.getSession());
+    } catch (OutOfStockException e) {
+      request.setAttribute("error","Out of stock. Max Available:" + product.getStock());
+      doGet(request, response);
+      return;
     } catch (QuantitySumInCartWillBeMoreThanStockException e) {
-      response.sendRedirect(prepareRedirectURL(request, "&error=Out of stock. "
-                      + (product.getStock() - e.getCurrentCartItemQuantity())
-                      + " more available."));
+      request.setAttribute("error","Out of stock. "
+              + (product.getStock() - e.getCurrentCartItemQuantity())
+              + " more available.");
+      doGet(request, response);
       return;
     }
 
-    response.sendRedirect(prepareRedirectURL(request, "&successMessage=Product added to cart"));
+    response.sendRedirect(prepareSuccessRedirectURL(request));
   }
 
   private int parseQuantityAccordingToLocale(Locale locale, String quantityString) throws ParseException {
@@ -116,15 +121,10 @@ public class ProductListPageServlet extends HttpServlet {
             + productIdString);
   }
 
-  private String prepareRedirectURL(HttpServletRequest request, String messageParam) {
-    String params = request.getParameterMap().entrySet().stream()
-            .filter(entry -> !entry.getKey().matches("successMessage|error"))
-            .map(entry -> entry.getKey() + "=" + entry.getValue()[entry.getValue().length - 1])
-            .collect(Collectors.joining("&"));
-
+  private String prepareSuccessRedirectURL(HttpServletRequest request) {
     return request.getRequestURI()
             + "?"
-            + params
-            + messageParam;
+            + request.getQueryString()
+            + "&successMessage=Product added to cart";
   }
 }
