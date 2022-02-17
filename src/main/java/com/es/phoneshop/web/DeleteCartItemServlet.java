@@ -28,8 +28,13 @@ public class DeleteCartItemServlet extends HttpServlet {
 
   @Override
   protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    String pathInfo = request.getPathInfo();
+    if (pathInfo == null) {
+      redirectToProductNotFoundPage(request, response, null);
+      return;
+    }
+    String productIdString = pathInfo.substring(1);
 
-    String productIdString = extractProductId(request);
     if (isNotADigit(productIdString)) {
       redirectToProductNotFoundPage(request, response, productIdString);
       return;
@@ -53,10 +58,6 @@ public class DeleteCartItemServlet extends HttpServlet {
     cartService.delete(cart, productId, request.getSession());
 
     response.sendRedirect(request.getContextPath() + "/cart?successMessage=Cart Item deleted successfully");
-  }
-
-  private String extractProductId(HttpServletRequest request) {
-    return request.getPathInfo().substring(1);
   }
 
   private boolean isNotADigit(String string) {

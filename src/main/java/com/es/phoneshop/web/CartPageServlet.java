@@ -3,6 +3,7 @@ package com.es.phoneshop.web;
 import com.es.phoneshop.model.product.*;
 import com.es.phoneshop.model.product.cart.CartService;
 import com.es.phoneshop.model.product.cart.DefaultCartService;
+import com.es.phoneshop.model.product.cart.exception.OutOfStockException;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -73,13 +74,13 @@ public class CartPageServlet extends HttpServlet {
         continue;
       }
 
-      if (quantity > product.getStock()) {
-        validationErrors.put(productId, "Out of stock. Available:" + product.getStock());
-        continue;
+      try {
+        cartService.update(cartService.getCart(request), productId, quantity, request.getSession());
+      } catch (OutOfStockException e) {
+        validationErrors.put(productId, "Out of stock. Max Available:" + product.getStock());
       }
-
-      cartService.update(cartService.getCart(request), productId, quantity, request.getSession());
     }
+
     if (validationErrors.isEmpty()) {
       response.sendRedirect(request.getContextPath() + "/cart" + "?successMessage=Products updated successfully");
     } else {

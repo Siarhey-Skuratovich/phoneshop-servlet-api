@@ -5,6 +5,7 @@ import com.es.phoneshop.model.product.Product;
 import com.es.phoneshop.model.product.ProductDao;
 import com.es.phoneshop.model.product.cart.CartService;
 import com.es.phoneshop.model.product.cart.DefaultCartService;
+import com.es.phoneshop.model.product.cart.exception.OutOfStockException;
 import com.es.phoneshop.model.product.cart.exception.QuantitySumInCartWillBeMoreThanStockException;
 import com.es.phoneshop.util.lock.DefaultSessionLockManager;
 import com.es.phoneshop.util.lock.SessionLockManager;
@@ -101,18 +102,16 @@ public class ProductDetailsPageServlet extends HttpServlet {
       return;
     }
 
-    if (quantity > product.getStock()) {
+    try {
+      cartService.add(cartService.getCart(request), productId, quantity, request.getSession());
+    } catch (OutOfStockException e) {
       response.sendRedirect(request.getContextPath()
               + "/products/"
               + productId
               + "?quantity=" + quantityString + "&"
-              + "error=Out of stock. Available:"
+              + "error=Out of stock. Max Available:"
               + (product.getStock()));
       return;
-    }
-
-    try {
-      cartService.add(cartService.getCart(request), productId, quantity, request.getSession());
     } catch (QuantitySumInCartWillBeMoreThanStockException e) {
       response.sendRedirect(request.getContextPath()
               + "/products/"

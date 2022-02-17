@@ -8,6 +8,8 @@ import java.util.Currency;
 import java.util.Locale;
 
 public class PriceChange implements Serializable {
+  private static final long serialVersionUID = -4613545321743128814L;
+
   private final String startDate;
   private final BigDecimal price;
   private final Currency currency;

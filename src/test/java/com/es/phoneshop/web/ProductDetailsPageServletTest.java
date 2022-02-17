@@ -7,6 +7,7 @@ import com.es.phoneshop.model.product.cart.Cart;
 import com.es.phoneshop.model.product.cart.CartItem;
 import com.es.phoneshop.model.product.cart.CartService;
 import com.es.phoneshop.model.product.cart.DefaultCartService;
+import com.es.phoneshop.model.product.cart.exception.OutOfStockException;
 import com.es.phoneshop.model.product.cart.exception.QuantitySumInCartWillBeMoreThanStockException;
 import org.junit.Before;
 import org.junit.Test;
@@ -165,7 +166,7 @@ public class ProductDetailsPageServletTest {
             + "/products/"
             + productId
             + "?quantity=" + quantityString + "&"
-            + "error=Out of stock. Available:"
+            + "error=Out of stock. Max Available:"
             + (product.getStock()));
     assertFalse(cartService.getCart(request).getCartItemByProductId(productId).isPresent());
   }
@@ -237,7 +238,7 @@ public class ProductDetailsPageServletTest {
   }
 
   @Test
-  public void testDoPostIfQuantitySumInCartWillBeMoreThanStock() throws IOException, QuantitySumInCartWillBeMoreThanStockException {
+  public void testDoPostIfQuantitySumInCartWillBeMoreThanStock() throws IOException, QuantitySumInCartWillBeMoreThanStockException, OutOfStockException {
     long productId = 6L;
     Product product = productDao.getProduct(productId).get();
     when(request.getPathInfo()).thenReturn("/" + productId);
