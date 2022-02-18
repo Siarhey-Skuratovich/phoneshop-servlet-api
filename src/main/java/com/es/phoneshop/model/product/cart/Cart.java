@@ -9,12 +9,12 @@ public class Cart implements Serializable {
   private static final long serialVersionUID = -5168977499824515044L;
 
   private int totalQuantity;
-  private Map<Currency, BigDecimal> totalCostsMap;
-  private final List<CartItem> items;
+  private BigDecimal totalCost;
+  private List<CartItem> items;
 
   public Cart() {
     this.items = new CopyOnWriteArrayList<>();
-    totalCostsMap = Collections.emptyMap();
+    this.totalCost = BigDecimal.valueOf(0);
   }
 
   public List<CartItem> getItems() {
@@ -40,12 +40,15 @@ public class Cart implements Serializable {
     this.totalQuantity = totalQuantity;
   }
 
-  public Map<Currency, BigDecimal> getTotalCostsMap() {
-    return totalCostsMap;
+  public BigDecimal getTotalCost() {
+    return totalCost;
   }
 
-  public void setTotalCostsMap(Map<Currency, BigDecimal> totalCostsMap) {
-    this.totalCostsMap = totalCostsMap;
+  public void setTotalCost(BigDecimal totalCost) {
+    this.totalCost = totalCost;
   }
 
+  public void setItems(List<CartItem> items) {
+    this.items = items;
+  }
 }

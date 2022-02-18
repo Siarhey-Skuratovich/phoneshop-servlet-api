@@ -129,20 +129,16 @@ public class DefaultCartService implements CartService {
   }
 
   private void recalculateCart(Cart cart) {
-    cart.setTotalCostsMap(getTotalCostsMap(cart));
-    cart.setTotalQuantity(cart.getItems().stream().mapToInt(CartItem::getQuantity).sum());
-  }
+    cart.setTotalCost(cart.getItems().stream()
+            .map(cartItem -> cartItem
+                    .getProduct()
+                    .getPrice()
+                    .multiply(BigDecimal.valueOf(cartItem.getQuantity())))
+            .reduce(BigDecimal.valueOf(0), BigDecimal::add));
 
-  private Map<Currency, BigDecimal> getTotalCostsMap(Cart cart) {
-    return cart.getItems().stream()
-            .collect(Collectors.groupingBy(cartItem -> cartItem
-                            .getProduct()
-                            .getCurrency(),
-                    Collectors.reducing(BigDecimal.valueOf(0),
-                            cartItem -> cartItem
-                                    .getProduct()
-                                    .getPrice()
-                                    .multiply(BigDecimal.valueOf(cartItem.getQuantity())),
-                            BigDecimal::add)));
+    cart.setTotalQuantity(cart.getItems().stream().
+            mapToInt(CartItem::getQuantity)
+            .sum());
   }
 }
+
