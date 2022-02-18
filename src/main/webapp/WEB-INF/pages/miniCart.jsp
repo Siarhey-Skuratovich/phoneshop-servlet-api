@@ -11,16 +11,8 @@
   <tr>
     <td>
       <span>Total Quantity: ${cart.totalQuantity}<br></span>
-      <span>Total Cost:
-        <c:if test="${cart.totalCostsMap.size() == 0}">
-          0
-        </c:if>
-  <c:forEach var="entry" items="${cart.totalCostsMap.entrySet()}" varStatus="status">
-    <fmt:formatNumber value="${entry.value}" type="currency" currencySymbol="${entry.key.symbol}"/>
-    <c:if test="${not status.last}">
-      and
-    </c:if>
-  </c:forEach>
+      <span>Total Cost: <fmt:formatNumber value="${cart.totalCost}" type="currency"
+                                                        currencySymbol="$"/>
   </span>
     </td>
   </tr>
