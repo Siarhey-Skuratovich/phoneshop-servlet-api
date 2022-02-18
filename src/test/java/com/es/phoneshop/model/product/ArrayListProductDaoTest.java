@@ -70,10 +70,13 @@ public class ArrayListProductDaoTest {
 
   @Test
   public void testProductUpdate() {
-    Product product = new Product("WAS-LX1", "Huawei P10 Lite", new BigDecimal(100), Currency.getInstance("USD"), 1, null);
-    product.setId(3L);
-    productDao.save(product);
+    long productId = 3L;
+    Product oldProduct = productDao.getProduct(productId).get();
+    Product newProduct = new Product("WAS-LX1", "Huawei P10 Lite", new BigDecimal(100), Currency.getInstance("USD"), 1, null);
+    newProduct.setId(productId);
+    productDao.save(newProduct);
     assertEquals("WAS-LX1", productDao.getProduct(3L).get().getCode());
+    productDao.save(oldProduct);
   }
 
   @Test
