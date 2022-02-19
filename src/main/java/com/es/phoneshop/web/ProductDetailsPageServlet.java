@@ -3,10 +3,10 @@ package com.es.phoneshop.web;
 import com.es.phoneshop.model.product.ArrayListProductDao;
 import com.es.phoneshop.model.product.Product;
 import com.es.phoneshop.model.product.ProductDao;
-import com.es.phoneshop.model.product.cart.CartService;
-import com.es.phoneshop.model.product.cart.DefaultCartService;
-import com.es.phoneshop.model.product.cart.exception.OutOfStockException;
-import com.es.phoneshop.model.product.cart.exception.QuantitySumInCartWillBeMoreThanStockException;
+import com.es.phoneshop.model.cart.CartService;
+import com.es.phoneshop.model.cart.DefaultCartService;
+import com.es.phoneshop.model.cart.exception.OutOfStockException;
+import com.es.phoneshop.model.cart.exception.QuantitySumInCartWillBeMoreThanStockException;
 import com.es.phoneshop.util.lock.DefaultSessionLockManager;
 import com.es.phoneshop.util.lock.SessionLockManager;
 
@@ -44,7 +44,7 @@ public class ProductDetailsPageServlet extends HttpServlet {
       redirectToProductNotFoundPage(request, response, productIdString);
       return;
     }
-    Optional<Product> optionalProduct = productDao.getProduct(Long.parseLong(productIdString));
+    Optional<Product> optionalProduct = productDao.get(Long.parseLong(productIdString));
     if (!optionalProduct.isPresent()) {
       redirectToProductNotFoundPage(request, response, productIdString);
       return;
@@ -65,7 +65,7 @@ public class ProductDetailsPageServlet extends HttpServlet {
     }
     long productId = Long.parseLong(productIdString);
 
-    Optional<Product> productOptional = productDao.getProduct(productId);
+    Optional<Product> productOptional = productDao.get(productId);
     if (!productOptional.isPresent()) {
       redirectToProductNotFoundPage(request, response, productIdString);
       return;

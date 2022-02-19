@@ -3,8 +3,8 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="tags" tagdir="/WEB-INF/tags" %>
 
-<jsp:useBean id="cart" type="com.es.phoneshop.model.product.cart.Cart" scope="request"/>
-<tags:master pageTitle="Product Cart List">
+<jsp:useBean id="cart" type="com.es.phoneshop.model.cart.Cart" scope="request"/>
+<tags:master pageTitle="Product Cart">
   <p>
       ${cart}
   </p>
@@ -83,4 +83,7 @@
   </form>
   <form id="deleteCartItem" method="post">
   </form>
+  <a href="${pageContext.servletContext.contextPath}/checkout">
+    <button>Checkout</button>
+  </a>
 </tags:master>

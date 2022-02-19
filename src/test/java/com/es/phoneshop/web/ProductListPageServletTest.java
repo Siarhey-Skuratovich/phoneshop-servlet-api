@@ -3,11 +3,11 @@ package com.es.phoneshop.web;
 import com.es.phoneshop.model.product.ArrayListProductDao;
 import com.es.phoneshop.model.product.Product;
 import com.es.phoneshop.model.product.ProductDao;
-import com.es.phoneshop.model.product.cart.Cart;
-import com.es.phoneshop.model.product.cart.CartService;
-import com.es.phoneshop.model.product.cart.DefaultCartService;
-import com.es.phoneshop.model.product.cart.exception.OutOfStockException;
-import com.es.phoneshop.model.product.cart.exception.QuantitySumInCartWillBeMoreThanStockException;
+import com.es.phoneshop.model.cart.Cart;
+import com.es.phoneshop.model.cart.CartService;
+import com.es.phoneshop.model.cart.DefaultCartService;
+import com.es.phoneshop.model.cart.exception.OutOfStockException;
+import com.es.phoneshop.model.cart.exception.QuantitySumInCartWillBeMoreThanStockException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -131,7 +131,7 @@ public class ProductListPageServletTest {
     when(request.getParameter("quantity")).thenReturn(quantityString);
     servlet.doPost(request, response);
 
-    verify(request).setAttribute("error","Out of stock. Max Available:" + productDao.getProduct(productId).get().getStock());
+    verify(request).setAttribute("error","Out of stock. Max Available:" + productDao.get(productId).get().getStock());
     verify(request).getRequestDispatcher(eq("/WEB-INF/pages/productList.jsp"));
     verify(requestDispatcher).forward(request, response);
     assertFalse(cartService.getCart(request).getCartItemByProductId(productId).isPresent());
@@ -169,7 +169,7 @@ public class ProductListPageServletTest {
   @Test
   public void testDoPostIfQuantitySumInCartWillBeMoreThanStock() throws IOException, QuantitySumInCartWillBeMoreThanStockException, ServletException, OutOfStockException {
     long productId = 6L;
-    Product product = productDao.getProduct(productId).get();
+    Product product = productDao.get(productId).get();
     when(request.getParameter("productId")).thenReturn(String.valueOf(productId));
 
 

@@ -1,7 +1,7 @@
-package com.es.phoneshop.model.product.cart;
+package com.es.phoneshop.model.cart;
 
-import com.es.phoneshop.model.product.cart.exception.OutOfStockException;
-import com.es.phoneshop.model.product.cart.exception.QuantitySumInCartWillBeMoreThanStockException;
+import com.es.phoneshop.model.cart.exception.QuantitySumInCartWillBeMoreThanStockException;
+import com.es.phoneshop.model.cart.exception.OutOfStockException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;

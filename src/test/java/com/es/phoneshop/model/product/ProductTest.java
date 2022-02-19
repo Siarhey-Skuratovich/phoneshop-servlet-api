@@ -41,7 +41,7 @@ public class ProductTest {
 
   @Test
   public void testMultiplePriceChange() {
-    Product product = productDao.getProduct(3L).get();
+    Product product = productDao.get(3L).get();
     List<BigDecimal> expectedPrices = new ArrayList<>();
     expectedPrices.add(product.getPrice());
 
@@ -55,7 +55,7 @@ public class ProductTest {
     expectedPrices.add(price3);
     productDao.save(product);
 
-    List<PriceChange> history = productDao.getProduct(3L).get().getPriceChangesHistory();
+    List<PriceChange> history = productDao.get(3L).get().getPriceChangesHistory();
     assertEquals(5, history.size());
     for (int i = history.size() - 3; i < history.size(); i++) {
       assertEquals(expectedPrices.get(i + 3 - history.size()), history.get(i).getPrice());

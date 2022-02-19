@@ -1,10 +1,10 @@
-package com.es.phoneshop.model.product.cart;
+package com.es.phoneshop.model.cart;
 
+import com.es.phoneshop.model.cart.exception.QuantitySumInCartWillBeMoreThanStockException;
 import com.es.phoneshop.model.product.ArrayListProductDao;
 import com.es.phoneshop.model.product.Product;
 import com.es.phoneshop.model.product.ProductDao;
-import com.es.phoneshop.model.product.cart.exception.OutOfStockException;
-import com.es.phoneshop.model.product.cart.exception.QuantitySumInCartWillBeMoreThanStockException;
+import com.es.phoneshop.model.cart.exception.OutOfStockException;
 import com.es.phoneshop.util.lock.DefaultSessionLockManager;
 import com.es.phoneshop.util.lock.SessionLockManager;
 
@@ -13,7 +13,6 @@ import javax.servlet.http.HttpSession;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.locks.Lock;
-import java.util.stream.Collectors;
 
 public class DefaultCartService implements CartService {
   private static final String CART_SESSION_ATTRIBUTE = DefaultCartService.class.getName() + ".cart";
@@ -53,7 +52,7 @@ public class DefaultCartService implements CartService {
     Lock sessionLock = sessionLockManager.getSessionLock(session, LOCK_SESSION_ATTRIBUTE);
     sessionLock.lock();
     try {
-      Optional<Product> productOptional = productDao.getProduct(productId);
+      Optional<Product> productOptional = productDao.get(productId);
       Optional<CartItem> cartItemOptional = cart.getCartItemByProductId(productId);
 
       if (!productOptional.isPresent()) {
@@ -87,7 +86,7 @@ public class DefaultCartService implements CartService {
     Lock sessionLock = sessionLockManager.getSessionLock(session, LOCK_SESSION_ATTRIBUTE);
     sessionLock.lock();
     try {
-      Optional<Product> productOptional = productDao.getProduct(productId);
+      Optional<Product> productOptional = productDao.get(productId);
       Optional<CartItem> cartItemOptional = cart.getCartItemByProductId(productId);
 
       if (!productOptional.isPresent()) {

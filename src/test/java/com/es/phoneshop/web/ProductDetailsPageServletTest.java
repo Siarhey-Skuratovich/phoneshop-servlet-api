@@ -3,12 +3,11 @@ package com.es.phoneshop.web;
 import com.es.phoneshop.model.product.ArrayListProductDao;
 import com.es.phoneshop.model.product.Product;
 import com.es.phoneshop.model.product.ProductDao;
-import com.es.phoneshop.model.product.cart.Cart;
-import com.es.phoneshop.model.product.cart.CartItem;
-import com.es.phoneshop.model.product.cart.CartService;
-import com.es.phoneshop.model.product.cart.DefaultCartService;
-import com.es.phoneshop.model.product.cart.exception.OutOfStockException;
-import com.es.phoneshop.model.product.cart.exception.QuantitySumInCartWillBeMoreThanStockException;
+import com.es.phoneshop.model.cart.Cart;
+import com.es.phoneshop.model.cart.CartService;
+import com.es.phoneshop.model.cart.DefaultCartService;
+import com.es.phoneshop.model.cart.exception.OutOfStockException;
+import com.es.phoneshop.model.cart.exception.QuantitySumInCartWillBeMoreThanStockException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -157,7 +156,7 @@ public class ProductDetailsPageServletTest {
   public void testDoPostWithQuantityMoreThanStock() throws IOException {
     long productId = 6L;
     String quantityString = "1000";
-    Product product = productDao.getProduct(productId).get();
+    Product product = productDao.get(productId).get();
     when(request.getPathInfo()).thenReturn("/" + productId);
     when(request.getParameter("quantity")).thenReturn(quantityString);
     servlet.doPost(request, response);
@@ -240,7 +239,7 @@ public class ProductDetailsPageServletTest {
   @Test
   public void testDoPostIfQuantitySumInCartWillBeMoreThanStock() throws IOException, QuantitySumInCartWillBeMoreThanStockException, OutOfStockException {
     long productId = 6L;
-    Product product = productDao.getProduct(productId).get();
+    Product product = productDao.get(productId).get();
     when(request.getPathInfo()).thenReturn("/" + productId);
 
     cartService.add(cart, productId, 3, session);
