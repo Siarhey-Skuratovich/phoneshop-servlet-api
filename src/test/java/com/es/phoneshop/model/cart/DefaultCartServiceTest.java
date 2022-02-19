@@ -1,10 +1,14 @@
-package com.es.phoneshop.model.product.cart;
+package com.es.phoneshop.model.cart;
 
+import com.es.phoneshop.model.cart.Cart;
+import com.es.phoneshop.model.cart.CartItem;
+import com.es.phoneshop.model.cart.CartService;
+import com.es.phoneshop.model.cart.DefaultCartService;
 import com.es.phoneshop.model.product.ArrayListProductDao;
 import com.es.phoneshop.model.product.Product;
 import com.es.phoneshop.model.product.ProductDao;
-import com.es.phoneshop.model.product.cart.exception.OutOfStockException;
-import com.es.phoneshop.model.product.cart.exception.QuantitySumInCartWillBeMoreThanStockException;
+import com.es.phoneshop.model.cart.exception.OutOfStockException;
+import com.es.phoneshop.model.cart.exception.QuantitySumInCartWillBeMoreThanStockException;
 import com.es.phoneshop.web.DemoDataServletContextListener;
 import org.junit.Before;
 import org.junit.Test;
@@ -71,7 +75,7 @@ public class DefaultCartServiceTest {
     Optional<CartItem> optionalCartItem = cartService.getCart(request).getCartItemByProductId(productId);
     assertEquals(2, optionalCartItem.get().getQuantity());
 
-    Product product = productDao.getProduct(productId).get();
+    Product product = productDao.get(productId).get();
     assertEquals(1, cartService.getCart(request).getItems().stream()
             .filter(item -> item.getProduct().getCode().equals(product.getCode()))
             .count());
@@ -107,8 +111,8 @@ public class DefaultCartServiceTest {
     cartService.add(cart, productId1, 2, session);
     cartService.add(cart, productId1 + 1, 1, session);
 
-    Product product1 = productDao.getProduct(productId1).get();
-    Product product2 = productDao.getProduct(productId1 + 1).get();
+    Product product1 = productDao.get(productId1).get();
+    Product product2 = productDao.get(productId1 + 1).get();
 
 
     assertEquals(3, cart.getTotalQuantity());

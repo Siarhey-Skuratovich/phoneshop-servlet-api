@@ -48,13 +48,13 @@ public class ArrayListProductDaoTest {
 
   @Test
   public void checkIfTheRightProductHasBeenGot() {
-    assertEquals("sgs3", productDao.getProduct(2L).get().getCode());
+    assertEquals("sgs3", productDao.get(2L).get().getCode());
   }
 
   @Test
   public void checkIfTheProductIsDeleted() {
     productDao.delete(4L);
-    assertFalse(productDao.getProduct(4L).isPresent());
+    assertFalse(productDao.get(4L).isPresent());
   }
 
   @Test
@@ -63,7 +63,7 @@ public class ArrayListProductDaoTest {
     productDao.save(newProduct);
     assertNotNull(newProduct.getId());
 
-    Optional<Product> productOptional = productDao.getProduct(newProduct.getId());
+    Optional<Product> productOptional = productDao.get(newProduct.getId());
     assertTrue(productOptional.isPresent());
     assertEquals("WAS-LX1", productOptional.get().getCode());
   }
@@ -71,11 +71,11 @@ public class ArrayListProductDaoTest {
   @Test
   public void testProductUpdate() {
     long productId = 3L;
-    Product oldProduct = productDao.getProduct(productId).get();
+    Product oldProduct = productDao.get(productId).get();
     Product newProduct = new Product("WAS-LX1", "Huawei P10 Lite", new BigDecimal(100), Currency.getInstance("USD"), 1, null);
     newProduct.setId(productId);
     productDao.save(newProduct);
-    assertEquals("WAS-LX1", productDao.getProduct(3L).get().getCode());
+    assertEquals("WAS-LX1", productDao.get(3L).get().getCode());
     productDao.save(oldProduct);
   }
 
@@ -104,7 +104,7 @@ public class ArrayListProductDaoTest {
 
   @Test
   public void testGetProductByNullId() {
-    assertFalse(productDao.getProduct(null).isPresent());
+    assertFalse(productDao.get(null).isPresent());
   }
 
   @Test

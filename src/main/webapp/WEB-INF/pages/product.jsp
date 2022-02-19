@@ -4,7 +4,7 @@
 <%@ taglib prefix="tags" tagdir="/WEB-INF/tags" %>
 
 <jsp:useBean id="product" type="com.es.phoneshop.model.product.Product" scope="request"/>
-<jsp:useBean id="cart" type="com.es.phoneshop.model.product.cart.Cart" scope="request"/>
+<jsp:useBean id="cart" type="com.es.phoneshop.model.cart.Cart" scope="request"/>
 <tags:master pageTitle="Product Details">
   <p>
     ${cart}

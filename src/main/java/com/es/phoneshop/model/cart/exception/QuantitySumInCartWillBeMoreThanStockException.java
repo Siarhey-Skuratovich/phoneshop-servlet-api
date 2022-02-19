@@ -1,4 +1,4 @@
-package com.es.phoneshop.model.product.cart.exception;
+package com.es.phoneshop.model.cart.exception;
 
 public class QuantitySumInCartWillBeMoreThanStockException extends Exception {
   private final int currentCartItemQuantity;

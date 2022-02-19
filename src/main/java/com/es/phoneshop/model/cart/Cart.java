@@ -1,4 +1,4 @@
-package com.es.phoneshop.model.product.cart;
+package com.es.phoneshop.model.cart;
 
 import java.io.Serializable;
 import java.math.BigDecimal;

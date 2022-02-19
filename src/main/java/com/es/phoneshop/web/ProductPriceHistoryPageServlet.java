@@ -28,7 +28,7 @@ public class ProductPriceHistoryPageServlet extends HttpServlet {
       forwardToProductNotFoundPage(request, response, productId);
       return;
     }
-    Optional<Product> optionalProduct = productDao.getProduct(Long.parseLong(productId));
+    Optional<Product> optionalProduct = productDao.get(Long.parseLong(productId));
     if (optionalProduct.isPresent()) {
       request.setAttribute("product", optionalProduct.get());
       request.getRequestDispatcher("/WEB-INF/pages/productPriceHistories.jsp").forward(request, response);

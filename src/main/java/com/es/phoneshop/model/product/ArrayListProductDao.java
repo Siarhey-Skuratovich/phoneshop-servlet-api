@@ -1,16 +1,13 @@
 package com.es.phoneshop.model.product;
 
+import com.es.phoneshop.model.GenericDao;
+
 import java.util.*;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-public class ArrayListProductDao implements ProductDao {
-  private long maxId;
-  private final List<Product> products = new ArrayList<>();
+public class ArrayListProductDao extends GenericDao<Product> implements ProductDao {
   private final Map<SortField, Comparator<Product>> sortingComparators;
-  private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
   private ArrayListProductDao() {
     EnumMap<SortField, Comparator<Product>> sortingComparators = new EnumMap<>(SortField.class);
@@ -28,26 +25,10 @@ public class ArrayListProductDao implements ProductDao {
   }
 
   @Override
-  public Optional<Product> getProduct(Long id) {
-    if (id == null) {
-      return Optional.empty();
-    }
-
-    lock.readLock().lock();
-    try {
-      return products.stream()
-              .filter(product -> id.equals(product.getId()))
-              .findAny();
-    } finally {
-      lock.readLock().unlock();
-    }
-  }
-
-  @Override
   public List<Product> findProducts(String query, SortField sortField, SortOrder sortOrder) {
-    lock.readLock().lock();
+    getLock().readLock().lock();
     try {
-      List<Product> resultProductList = products.stream()
+      List<Product> resultProductList = getItems().stream()
               .filter(getFilterPredicate(query))
               .collect(Collectors.toList());
 
@@ -60,37 +41,17 @@ public class ArrayListProductDao implements ProductDao {
       return resultProductList;
 
     } finally {
-      lock.readLock().unlock();
-    }
-  }
-
-  @Override
-  public void save(Product product) {
-    lock.writeLock().lock();
-    try {
-      if (product.getId() != null) {
-        for (int i = 0; i < products.size(); i++) {
-          if (product.getId().equals(products.get(i).getId())) {
-            products.set(i, product);
-            break;
-          }
-        }
-      } else {
-        product.setId(maxId++);
-        products.add(product);
-      }
-    } finally {
-      lock.writeLock().unlock();
+      getLock().readLock().unlock();
     }
   }
 
   @Override
   public void delete(Long id) {
-    lock.writeLock().lock();
+    getLock().writeLock().lock();
     try {
-      products.removeIf(product -> id.equals(product.getId()));
+      getItems().removeIf(product -> id.equals(product.getId()));
     } finally {
-      lock.writeLock().unlock();
+      getLock().writeLock().unlock();
     }
   }
 

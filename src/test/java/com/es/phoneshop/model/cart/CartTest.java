@@ -1,10 +1,13 @@
-package com.es.phoneshop.model.product.cart;
+package com.es.phoneshop.model.cart;
 
+import com.es.phoneshop.model.cart.Cart;
+import com.es.phoneshop.model.cart.CartService;
+import com.es.phoneshop.model.cart.DefaultCartService;
 import com.es.phoneshop.model.product.ArrayListProductDao;
 import com.es.phoneshop.model.product.Product;
 import com.es.phoneshop.model.product.ProductDao;
-import com.es.phoneshop.model.product.cart.exception.OutOfStockException;
-import com.es.phoneshop.model.product.cart.exception.QuantitySumInCartWillBeMoreThanStockException;
+import com.es.phoneshop.model.cart.exception.OutOfStockException;
+import com.es.phoneshop.model.cart.exception.QuantitySumInCartWillBeMoreThanStockException;
 import com.es.phoneshop.web.DemoDataServletContextListener;
 import org.junit.Before;
 import org.junit.Test;
@@ -54,7 +57,7 @@ public class CartTest {
 
   @Test
   public void testGetCartItemByExistingProductId() throws QuantitySumInCartWillBeMoreThanStockException, OutOfStockException {
-    Product product = productDao.getProduct(2L).get();
+    Product product = productDao.get(2L).get();
     cartService.add(cart,0L, 1, session);
     cartService.add(cart,product.getId(), 1, session);
     cartService.add(cart,3L, 1, session);
