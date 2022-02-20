@@ -15,7 +15,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
@@ -82,6 +81,26 @@ public class ArrayListOrderDaoTest {
     orderDao.save(expectedOrder);
     Order actualOrder = orderDao.get(0L).get();
 
+    assertEquals(expectedOrder, actualOrder);
+  }
+
+  @Test
+  public void testGetByOrderId() {
+    Cart cart = new Cart();
+    long productId1 = 0L;
+    long productId2 = 4L;
+    long productId3 = 7L;
+    CartItem cartItem1 = new CartItem(productDao.get(productId1).get(), 1);
+    CartItem cartItem2 = new CartItem(productDao.get(productId2).get(), 2);
+    CartItem cartItem3 = new CartItem(productDao.get(productId3).get(), 3);
+    List<CartItem> cartItemList = List.of(cartItem1, cartItem2, cartItem3);
+    cart.setItems(cartItemList);
+    Order expectedOrder = orderService.getOrder(cart);
+
+    orderService.placeOrder(expectedOrder);
+    String secureId = expectedOrder.getSecureId();
+
+    Order actualOrder = orderDao.getBySecureId(secureId).get();
 
     assertEquals(expectedOrder, actualOrder);
   }

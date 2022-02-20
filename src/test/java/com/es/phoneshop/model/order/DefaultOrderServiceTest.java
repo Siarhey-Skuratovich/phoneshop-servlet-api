@@ -22,8 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -107,10 +106,12 @@ public class DefaultOrderServiceTest {
     cart.setItems(cartItemList);
 
     Order expectedOrder = orderService.getOrder(cart);
+    assertNull(expectedOrder.getSecureId());
 
     orderService.placeOrder(expectedOrder);
     Order actualOrder = orderDao.get(0L).get();
 
+    assertNotNull(actualOrder.getSecureId());
     assertEquals(expectedOrder, actualOrder);
   }
 
