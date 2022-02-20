@@ -55,7 +55,8 @@ public class CheckoutPageServlet extends HttpServlet {
 
     if (validationErrors.isEmpty()) {
       orderService.placeOrder(order);
-      response.sendRedirect(request.getContextPath() + "/overview/" + order.getId());
+      cartService.clearCart(cart, request.getSession());
+      response.sendRedirect(request.getContextPath() + "/order/overview/" + order.getSecureId());
     } else {
       request.setAttribute("validationErrors", validationErrors);
       request.setAttribute("order", order);

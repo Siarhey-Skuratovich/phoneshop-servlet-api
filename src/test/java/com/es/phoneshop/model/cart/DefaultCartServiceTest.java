@@ -121,4 +121,23 @@ public class DefaultCartServiceTest {
     assertEquals(product1.getPrice().multiply(BigDecimal.valueOf(2)).add(product2.getPrice()),
             cart.getTotalCost());
   }
+
+  @Test
+  public void testClearCart() throws OutOfStockException, QuantitySumInCartWillBeMoreThanStockException {
+    long productId1 = 3L;
+    cartService.add(cart, productId1, 1, session);
+    Optional<CartItem> optionalCartItem1 = cartService.getCart(request).getCartItemByProductId(productId1);
+    assertTrue(optionalCartItem1.isPresent());
+
+    long productId2 = 4L;
+    cartService.add(cart, productId2, 1, session);
+    Optional<CartItem> optionalCartItem2 = cartService.getCart(request).getCartItemByProductId(productId2);
+    assertTrue(optionalCartItem2.isPresent());
+
+    cartService.clearCart(cart, session);
+
+    assertTrue(cart.getItems().isEmpty());
+    assertEquals(0, cart.getTotalQuantity());
+    assertEquals(BigDecimal.ZERO, cart.getTotalCost());
+  }
 }
