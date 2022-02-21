@@ -27,14 +27,14 @@ public class DefaultDosProtectServiceTest {
 
   @Test
   public void testIsAllowedIfLessThan21RequestsPerMinute() {
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < DefaultDosProtectService.THRESHOLD; i++) {
       assertTrue(dosProtectService.isAllowed("1"));
     }
   }
 
   @Test
   public void testIsAllowedIfMoreThan20RequestsPerMinute() {
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < DefaultDosProtectService.THRESHOLD; i++) {
       assertTrue(dosProtectService.isAllowed("1"));
     }
     for (int i = 0; i < 5; i++) {
@@ -56,7 +56,7 @@ public class DefaultDosProtectServiceTest {
 
     Field fieldCount = innerClass.getDeclaredField("count");
     fieldCount.setAccessible(true);
-    fieldCount.set(innerInstance, 30L);
+    fieldCount.set(innerInstance, DefaultDosProtectService.THRESHOLD + 10L);
 
     Class<DefaultDosProtectService> defaultDosProtectServiceClass = DefaultDosProtectService.class;
     Field fieldCountMap = defaultDosProtectServiceClass.getDeclaredField("countMap");
