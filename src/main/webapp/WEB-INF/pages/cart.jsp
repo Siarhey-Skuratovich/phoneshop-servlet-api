@@ -13,6 +13,11 @@
         ${param.successMessage}
     </p>
   </c:if>
+  <c:if test="${not empty param.emptyCartError}">
+    <p class="error">
+        ${param.emptyCartError}
+    </p>
+  </c:if>
   <c:if test="${not empty param.UrlParamError}">
     <p class="error">
         ${param.UrlParamError}
