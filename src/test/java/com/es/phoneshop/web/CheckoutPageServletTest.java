@@ -56,7 +56,17 @@ public class CheckoutPageServletTest {
   }
 
   @Test
-  public void testDoPostWithValidParams() throws IOException, ServletException {
+  public void testDoPostWithInvalidAttributes() throws ServletException, IOException {
+    servlet.doPost(request, response);
+    verify(request).setAttribute(eq("validationErrors"), anyMap());
+    verify(request).setAttribute(eq("order"), any());
+    verify(request).setAttribute(eq("paymentMethods"), any());
+    verify(request).getRequestDispatcher(eq("/WEB-INF/pages/checkout.jsp"));
+    verify(requestDispatcher).forward(request, response);
+  }
+
+  @Test
+  public void testDoPostWithValidAttributes() throws ServletException, IOException {
     when(request.getParameter("firstName")).thenReturn("asd");
     when(request.getParameter("lastName")).thenReturn("asd");
     when(request.getParameter("phone")).thenReturn("+375 (33) 123-23-23");
@@ -64,106 +74,6 @@ public class CheckoutPageServletTest {
     when(request.getParameter("deliveryDate")).thenReturn(LocalDate.now().toString());
     when(request.getParameter("paymentMethod")).thenReturn(PaymentMethod.CREDIT_CARD.name());
     servlet.doPost(request, response);
-
-    verify(response).sendRedirect(anyString());
+    verify(response).sendRedirect(any());
   }
-
-  @Test
-  public void testDoPostWithInvalidFirstName() throws IOException, ServletException {
-    when(request.getParameter("firstName")).thenReturn("");
-    when(request.getParameter("lastName")).thenReturn("asd");
-    when(request.getParameter("phone")).thenReturn("+375 (33) 123-23-23");
-    when(request.getParameter("deliveryAddress")).thenReturn("sad");
-    when(request.getParameter("deliveryDate")).thenReturn(String.valueOf(LocalDate.now()));
-    when(request.getParameter("paymentMethod")).thenReturn(PaymentMethod.CREDIT_CARD.name());
-    servlet.doPost(request, response);
-    verify(request).setAttribute(eq("validationErrors"), anyMap());
-    verify(request).setAttribute(eq("order"), any());
-    verify(request).setAttribute(eq("paymentMethods"), any());
-    verify(request).getRequestDispatcher(eq("/WEB-INF/pages/checkout.jsp"));
-    verify(requestDispatcher).forward(request, response);
-  }
-
-  @Test
-  public void testDoPostWithInvalidLastName() throws IOException, ServletException {
-    when(request.getParameter("firstName")).thenReturn("asd");
-    when(request.getParameter("lastName")).thenReturn("");
-    when(request.getParameter("phone")).thenReturn("+375 (33) 123-23-23");
-    when(request.getParameter("deliveryAddress")).thenReturn("sad");
-    when(request.getParameter("deliveryDate")).thenReturn(String.valueOf(LocalDate.now()));
-    when(request.getParameter("paymentMethod")).thenReturn(PaymentMethod.CREDIT_CARD.name());
-    servlet.doPost(request, response);
-    verify(request).setAttribute(eq("validationErrors"), anyMap());
-    verify(request).setAttribute(eq("order"), any());
-    verify(request).setAttribute(eq("paymentMethods"), any());
-    verify(request).getRequestDispatcher(eq("/WEB-INF/pages/checkout.jsp"));
-    verify(requestDispatcher).forward(request, response);
-  }
-
-  @Test
-  public void testDoPostWithInvalidPhone() throws IOException, ServletException {
-    when(request.getParameter("firstName")).thenReturn("asd");
-    when(request.getParameter("lastName")).thenReturn("asd");
-    when(request.getParameter("phone")).thenReturn("+375 (3341) 123-23-23123");
-    when(request.getParameter("deliveryAddress")).thenReturn("sad");
-    when(request.getParameter("deliveryDate")).thenReturn(String.valueOf(LocalDate.now()));
-    when(request.getParameter("paymentMethod")).thenReturn(PaymentMethod.CREDIT_CARD.name());
-    servlet.doPost(request, response);
-    verify(request).setAttribute(eq("validationErrors"), anyMap());
-    verify(request).setAttribute(eq("order"), any());
-    verify(request).setAttribute(eq("paymentMethods"), any());
-    verify(request).getRequestDispatcher(eq("/WEB-INF/pages/checkout.jsp"));
-    verify(requestDispatcher).forward(request, response);
-  }
-
-  @Test
-  public void testDoPostWithInvalidDeliveryAddress() throws IOException, ServletException {
-    when(request.getParameter("firstName")).thenReturn("asd");
-    when(request.getParameter("lastName")).thenReturn("asd");
-    when(request.getParameter("phone")).thenReturn("+375 (33) 123-23-23");
-    when(request.getParameter("deliveryAddress")).thenReturn("");
-    when(request.getParameter("deliveryDate")).thenReturn(String.valueOf(LocalDate.now()));
-    when(request.getParameter("paymentMethod")).thenReturn(PaymentMethod.CREDIT_CARD.name());
-    servlet.doPost(request, response);
-    verify(request).setAttribute(eq("validationErrors"), anyMap());
-    verify(request).setAttribute(eq("order"), any());
-    verify(request).setAttribute(eq("paymentMethods"), any());
-    verify(request).getRequestDispatcher(eq("/WEB-INF/pages/checkout.jsp"));
-    verify(requestDispatcher).forward(request, response);
-  }
-
-  @Test
-  public void testDoPostWithInvalidDeliveryDate() throws IOException, ServletException {
-    when(request.getParameter("firstName")).thenReturn("asd");
-    when(request.getParameter("lastName")).thenReturn("asd");
-    when(request.getParameter("phone")).thenReturn("+375 (33) 123-23-23");
-    when(request.getParameter("deliveryAddress")).thenReturn("asd");
-    when(request.getParameter("deliveryDate")).thenReturn(String.valueOf(LocalDate.of(2002, 1, 3)));
-    when(request.getParameter("paymentMethod")).thenReturn(PaymentMethod.CREDIT_CARD.name());
-    servlet.doPost(request, response);
-    verify(request).setAttribute(eq("validationErrors"), anyMap());
-    verify(request).setAttribute(eq("order"), any());
-    verify(request).setAttribute(eq("paymentMethods"), any());
-    verify(request).getRequestDispatcher(eq("/WEB-INF/pages/checkout.jsp"));
-    verify(requestDispatcher).forward(request, response);
-  }
-
-  @Test
-  public void testDoPostWithInvalidPaymentMethod() throws IOException, ServletException {
-    when(request.getParameter("firstName")).thenReturn("asd");
-    when(request.getParameter("lastName")).thenReturn("asd");
-    when(request.getParameter("phone")).thenReturn("+375 (33) 123-23-23");
-    when(request.getParameter("deliveryAddress")).thenReturn("asd");
-    when(request.getParameter("deliveryDate")).thenReturn(LocalDate.now().toString());
-    when(request.getParameter("paymentMethod")).thenReturn("asd");
-    servlet.doPost(request, response);
-    verify(request).setAttribute(eq("validationErrors"), anyMap());
-    verify(request).setAttribute(eq("order"), any());
-    verify(request).setAttribute(eq("paymentMethods"), any());
-    verify(request).getRequestDispatcher(eq("/WEB-INF/pages/checkout.jsp"));
-    verify(requestDispatcher).forward(request, response);
-  }
-
-
-
 }

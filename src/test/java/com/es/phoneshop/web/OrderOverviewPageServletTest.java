@@ -1,5 +1,6 @@
 package com.es.phoneshop.web;
 
+import com.es.phoneshop.model.cart.DefaultCartService;
 import com.es.phoneshop.model.order.*;
 import org.junit.Before;
 import org.junit.Test;
@@ -12,6 +13,7 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.UUID;
 
@@ -31,6 +33,8 @@ public class OrderOverviewPageServletTest {
   private RequestDispatcher requestDispatcher;
   @Mock
   private ServletConfig config;
+  @Mock
+  private HttpSession session;
 
   private OrderService orderService;
 
@@ -48,9 +52,17 @@ public class OrderOverviewPageServletTest {
 
   @Test
   public void testDoGetWithNotExistingSecureId() throws ServletException, IOException {
-    orderService.placeOrder(new Order());
-    orderService.placeOrder(new Order());
-    orderService.placeOrder(new Order());
+    Order order1 = new Order();
+    order1.setSecureId(UUID.randomUUID().toString());
+    orderDao.save(order1);
+
+    Order order2 = new Order();
+    order2.setSecureId(UUID.randomUUID().toString());
+    orderDao.save(order2);
+
+    Order order3 = new Order();
+    order3.setSecureId(UUID.randomUUID().toString());
+    orderDao.save(order3);
 
     String secureId = "asd";
     when(request.getPathInfo()).thenReturn("/" + secureId);

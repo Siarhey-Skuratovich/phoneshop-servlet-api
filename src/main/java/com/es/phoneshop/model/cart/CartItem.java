@@ -2,7 +2,7 @@ package com.es.phoneshop.model.cart;
 
 import com.es.phoneshop.model.product.Product;
 
-import java.io.Serializable;
+import java.io.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class CartItem implements Serializable, Cloneable {
@@ -35,10 +35,5 @@ public class CartItem implements Serializable, Cloneable {
 
   public void setQuantity(int quantity) {
     this.quantity.set(quantity);
-  }
-
-  @Override
-  public Object clone() throws CloneNotSupportedException {
-    return super.clone();
   }
 }

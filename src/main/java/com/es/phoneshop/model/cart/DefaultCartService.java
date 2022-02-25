@@ -10,6 +10,7 @@ import com.es.phoneshop.util.lock.SessionLockManager;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import java.io.*;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.locks.Lock;
@@ -128,18 +129,25 @@ public class DefaultCartService implements CartService {
     Lock sessionLock = sessionLockManager.getSessionLock(session, LOCK_SESSION_ATTRIBUTE);
     sessionLock.lock();
     try {
-      cart.getItems().removeIf(cartItem -> true);
+      cart.getItems().clear();
     } finally {
       recalculateCart(cart);
       sessionLock.unlock();
     }
   }
 
-  private boolean quantitySumInCartWillBeMoreThanStock(CartItem cartItem, int quantity, int stock) {
-    return cartItem.getQuantity() + quantity > stock;
+  @Override
+  public Cart makeCloneOf(Cart cart) throws IOException, ClassNotFoundException {
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    ObjectOutputStream out = new ObjectOutputStream(outputStream);
+    out.writeObject(cart);
+
+    ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
+    ObjectInputStream in = new ObjectInputStream(inputStream);
+    return (Cart) in.readObject();
   }
 
-  private void recalculateCart(Cart cart) {
+  public void recalculateCart(Cart cart) {
     cart.setTotalCost(cart.getItems().stream()
             .map(cartItem -> cartItem
                     .getProduct()
@@ -150,6 +158,10 @@ public class DefaultCartService implements CartService {
     cart.setTotalQuantity(cart.getItems().stream().
             mapToInt(CartItem::getQuantity)
             .sum());
+  }
+
+  private boolean quantitySumInCartWillBeMoreThanStock(CartItem cartItem, int quantity, int stock) {
+    return cartItem.getQuantity() + quantity > stock;
   }
 }
 

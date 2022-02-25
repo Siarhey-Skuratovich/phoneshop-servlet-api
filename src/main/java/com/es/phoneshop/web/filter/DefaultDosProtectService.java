@@ -22,19 +22,18 @@ public class DefaultDosProtectService implements DosProtectService {
 
   @Override
   public boolean isAllowed(String ip) {
-    CountAndLastTime countAndLastTime = countMap.get(ip);
-    if (countAndLastTime == null) {
-      countAndLastTime = new CountAndLastTime();
-      countMap.put(ip, countAndLastTime);
-      return true;
+    CountAndLastTime countAndLastTime = countMap.computeIfAbsent(ip, s -> new CountAndLastTime());
+
+    synchronized (countMap.get(ip)) {
+      if (isExpired(countAndLastTime)) {
+        countAndLastTime.count = 1L;
+        countAndLastTime.lastTime = LocalDateTime.now();
+        return true;
+      }
+
+      countAndLastTime.count++;
+      return countAndLastTime.count <= THRESHOLD;
     }
-    if (isExpired(countAndLastTime)) {
-      countAndLastTime.count = 1L;
-      countAndLastTime.lastTime = LocalDateTime.now();
-      return true;
-    }
-    countAndLastTime.count++;
-    return countAndLastTime.count <= THRESHOLD;
   }
 
   private boolean isExpired(CountAndLastTime countAndLastTime) {
@@ -46,7 +45,7 @@ public class DefaultDosProtectService implements DosProtectService {
     private LocalDateTime lastTime;
 
     public CountAndLastTime() {
-      count = 1L;
+      count = 0L;
       lastTime = LocalDateTime.now();
     }
   }
