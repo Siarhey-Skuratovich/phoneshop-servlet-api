@@ -24,7 +24,13 @@ public class OrderOverviewPageServlet extends HttpServlet {
 
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-    String secureOrderId = request.getPathInfo().substring(1);
+    String pathInfo = request.getPathInfo();
+    if (pathInfo == null) {
+      redirectToOrderNotFoundPage(request, response, null);
+      return;
+    }
+    String secureOrderId = pathInfo.substring(1);
+
     Optional<Order> optionalOrder = orderDao.getBySecureId(secureOrderId);
     if (!optionalOrder.isPresent()) {
       redirectToOrderNotFoundPage(request, response, secureOrderId);

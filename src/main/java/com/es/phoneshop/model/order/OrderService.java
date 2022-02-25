@@ -1,7 +1,9 @@
 package com.es.phoneshop.model.order;
 
 import com.es.phoneshop.model.cart.Cart;
+import com.es.phoneshop.model.order.exception.ValidationErrorsException;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 public interface OrderService {
@@ -9,5 +11,5 @@ public interface OrderService {
 
   List<PaymentMethod> getPaymentMethods();
 
-  void placeOrder(Order order);
+  Order placeOrder(HttpServletRequest request) throws ValidationErrorsException;
 }
