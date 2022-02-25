@@ -1,9 +1,9 @@
 package com.es.phoneshop.model.order;
 
 import com.es.phoneshop.model.cart.Cart;
-import com.es.phoneshop.model.cart.CartItem;
 import com.es.phoneshop.model.cart.CartService;
 import com.es.phoneshop.model.cart.DefaultCartService;
+import com.es.phoneshop.model.order.exception.EmptyCartException;
 import com.es.phoneshop.model.order.exception.ValidationErrorsException;
 import com.es.phoneshop.util.lock.DefaultSessionLockManager;
 import com.es.phoneshop.util.lock.SessionLockManager;
@@ -18,7 +18,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.locks.Lock;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 public class DefaultOrderService implements OrderService {
   public static final String LOCK_SESSION_ATTRIBUTE = DefaultOrderService.class.getName() + ".lock";
@@ -65,13 +64,16 @@ public class DefaultOrderService implements OrderService {
   }
 
   @Override
-  public Order placeOrder(HttpServletRequest request) throws ValidationErrorsException {
+  public Order placeOrder(HttpServletRequest request) throws ValidationErrorsException, EmptyCartException {
     Cart cart = cartService.getCart(request);
     Lock sessionLock = sessionLockManager.getSessionLock(request.getSession(), LOCK_SESSION_ATTRIBUTE);
     cart.lockCartOn(sessionLock);
     try {
-      Order order = getOrder(cart);
+      if (cart.getItems().isEmpty()) {
+        throw new EmptyCartException();
+      }
       Map<String, String> validationErrors = new HashMap<>();
+      Order order = getOrder(cart);
 
       setRequiredParameter(request, "firstName", validationErrors, order::setFirstName);
       setRequiredParameter(request, "lastName", validationErrors, order::setLastName);

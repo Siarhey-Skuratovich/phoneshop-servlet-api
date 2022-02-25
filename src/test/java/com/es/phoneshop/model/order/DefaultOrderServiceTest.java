@@ -4,6 +4,7 @@ import com.es.phoneshop.model.GenericDao;
 import com.es.phoneshop.model.cart.Cart;
 import com.es.phoneshop.model.cart.CartItem;
 import com.es.phoneshop.model.cart.DefaultCartService;
+import com.es.phoneshop.model.order.exception.EmptyCartException;
 import com.es.phoneshop.model.order.exception.ValidationErrorsException;
 import com.es.phoneshop.model.product.ArrayListProductDao;
 import com.es.phoneshop.model.product.ProductDao;
@@ -49,6 +50,8 @@ public class DefaultOrderServiceTest {
   @Mock
   private HttpSession session;
 
+  private final Cart cart = new Cart();
+
   @Before
   public void setUp() throws Exception {
     boolean productArrayIsEmpty = productDao.findProducts(null, null, null).isEmpty();
@@ -62,6 +65,7 @@ public class DefaultOrderServiceTest {
 
     when(request.getSession()).thenReturn(session);
     when(session.getAttribute(DefaultCartService.class.getName() + ".lock")).thenReturn(new ReentrantLock());
+    when(session.getAttribute(DefaultCartService.class.getName() + ".cart")).thenReturn(cart);
   }
 
   @After
@@ -109,7 +113,11 @@ public class DefaultOrderServiceTest {
   }
 
   @Test
-  public void testPlaceOrderWithValidParams() throws ValidationErrorsException {
+  public void testPlaceOrderWithValidParams() throws ValidationErrorsException, EmptyCartException {
+    cart.getItems().add(new CartItem(productDao.get(1L).get(), 1));
+    cart.getItems().add(new CartItem(productDao.get(2L).get(), 2));
+    cart.getItems().add(new CartItem(productDao.get(3L).get(), 3));
+
     when(request.getParameter("firstName")).thenReturn("asd");
     when(request.getParameter("lastName")).thenReturn("asd");
     when(request.getParameter("phone")).thenReturn("+375 (33) 123-23-23");
@@ -121,7 +129,11 @@ public class DefaultOrderServiceTest {
   }
 
   @Test(expected = ValidationErrorsException.class)
-  public void testPlaceOrderWithInvalidFirstName() throws ValidationErrorsException {
+  public void testPlaceOrderWithInvalidFirstName() throws ValidationErrorsException, EmptyCartException {
+    cart.getItems().add(new CartItem(productDao.get(1L).get(), 1));
+    cart.getItems().add(new CartItem(productDao.get(2L).get(), 2));
+    cart.getItems().add(new CartItem(productDao.get(3L).get(), 3));
+
     when(request.getParameter("firstName")).thenReturn("");
     when(request.getParameter("lastName")).thenReturn("asd");
     when(request.getParameter("phone")).thenReturn("+375 (33) 123-23-23");
@@ -132,7 +144,11 @@ public class DefaultOrderServiceTest {
   }
 
   @Test(expected = ValidationErrorsException.class)
-  public void testPlaceOrderWithInvalidLastName() throws ValidationErrorsException {
+  public void testPlaceOrderWithInvalidLastName() throws ValidationErrorsException, EmptyCartException {
+    cart.getItems().add(new CartItem(productDao.get(1L).get(), 1));
+    cart.getItems().add(new CartItem(productDao.get(2L).get(), 2));
+    cart.getItems().add(new CartItem(productDao.get(3L).get(), 3));
+
     when(request.getParameter("firstName")).thenReturn("asd");
     when(request.getParameter("lastName")).thenReturn("");
     when(request.getParameter("phone")).thenReturn("+375 (33) 123-23-23");
@@ -143,7 +159,11 @@ public class DefaultOrderServiceTest {
   }
 
   @Test(expected = ValidationErrorsException.class)
-  public void testPlaceOrderWithInvalidPhone() throws ValidationErrorsException {
+  public void testPlaceOrderWithInvalidPhone() throws ValidationErrorsException, EmptyCartException {
+    cart.getItems().add(new CartItem(productDao.get(1L).get(), 1));
+    cart.getItems().add(new CartItem(productDao.get(2L).get(), 2));
+    cart.getItems().add(new CartItem(productDao.get(3L).get(), 3));
+
     when(request.getParameter("firstName")).thenReturn("asd");
     when(request.getParameter("lastName")).thenReturn("asd");
     when(request.getParameter("phone")).thenReturn("+375 (3341) 123-23-23123");
@@ -154,7 +174,11 @@ public class DefaultOrderServiceTest {
   }
 
   @Test(expected = ValidationErrorsException.class)
-  public void testPlaceOrderWithInvalidDeliveryAddress() throws ValidationErrorsException {
+  public void testPlaceOrderWithInvalidDeliveryAddress() throws ValidationErrorsException, EmptyCartException {
+    cart.getItems().add(new CartItem(productDao.get(1L).get(), 1));
+    cart.getItems().add(new CartItem(productDao.get(2L).get(), 2));
+    cart.getItems().add(new CartItem(productDao.get(3L).get(), 3));
+
     when(request.getParameter("firstName")).thenReturn("asd");
     when(request.getParameter("lastName")).thenReturn("asd");
     when(request.getParameter("phone")).thenReturn("+375 (33) 123-23-23");
@@ -165,7 +189,11 @@ public class DefaultOrderServiceTest {
   }
 
   @Test(expected = ValidationErrorsException.class)
-  public void testPlaceOrderWithInvalidDeliveryDate() throws ValidationErrorsException {
+  public void testPlaceOrderWithInvalidDeliveryDate() throws ValidationErrorsException, EmptyCartException {
+    cart.getItems().add(new CartItem(productDao.get(1L).get(), 1));
+    cart.getItems().add(new CartItem(productDao.get(2L).get(), 2));
+    cart.getItems().add(new CartItem(productDao.get(3L).get(), 3));
+
     when(request.getParameter("firstName")).thenReturn("asd");
     when(request.getParameter("lastName")).thenReturn("asd");
     when(request.getParameter("phone")).thenReturn("+375 (33) 123-23-23");
@@ -176,13 +204,22 @@ public class DefaultOrderServiceTest {
   }
 
   @Test(expected = ValidationErrorsException.class)
-  public void testPlaceOrderWithInvalidPaymentMethod() throws ValidationErrorsException {
+  public void testPlaceOrderWithInvalidPaymentMethod() throws ValidationErrorsException, EmptyCartException {
+    cart.getItems().add(new CartItem(productDao.get(1L).get(), 1));
+    cart.getItems().add(new CartItem(productDao.get(2L).get(), 2));
+    cart.getItems().add(new CartItem(productDao.get(3L).get(), 3));
+
     when(request.getParameter("firstName")).thenReturn("asd");
     when(request.getParameter("lastName")).thenReturn("asd");
     when(request.getParameter("phone")).thenReturn("+375 (33) 123-23-23");
     when(request.getParameter("deliveryAddress")).thenReturn("asd");
     when(request.getParameter("deliveryDate")).thenReturn(LocalDate.now().toString());
     when(request.getParameter("paymentMethod")).thenReturn("asd");
+    orderService.placeOrder(request);
+  }
+
+  @Test(expected = EmptyCartException.class)
+  public void testPlaceOrderWithEmptyCart() throws ValidationErrorsException, EmptyCartException {
     orderService.placeOrder(request);
   }
 

@@ -6,6 +6,7 @@ import com.es.phoneshop.model.cart.DefaultCartService;
 import com.es.phoneshop.model.order.DefaultOrderService;
 import com.es.phoneshop.model.order.Order;
 import com.es.phoneshop.model.order.OrderService;
+import com.es.phoneshop.model.order.exception.EmptyCartException;
 import com.es.phoneshop.model.order.exception.ValidationErrorsException;
 
 import javax.servlet.ServletConfig;
@@ -30,6 +31,10 @@ public class CheckoutPageServlet extends HttpServlet {
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
     Cart cart = cartService.getCart(request);
+    if (cart.getItems().isEmpty()) {
+      response.sendRedirect(request.getContextPath() + "/cart?emptyCartError=You haven't added any product to order.");
+      return;
+    }
     request.setAttribute("order", orderService.getOrder(cart));
     request.setAttribute("paymentMethods", orderService.getPaymentMethods());
     request.getRequestDispatcher("/WEB-INF/pages/checkout.jsp").forward(request, response);
@@ -40,6 +45,8 @@ public class CheckoutPageServlet extends HttpServlet {
     try {
       Order placedOrder = orderService.placeOrder(request);
       response.sendRedirect(request.getContextPath() + "/order/overview/" + placedOrder.getSecureId());
+    } catch (EmptyCartException e) {
+      response.sendRedirect(request.getContextPath() + "/cart?emptyCartError=You haven't added any product to order.");
     } catch (ValidationErrorsException e) {
       request.setAttribute("validationErrors", e.getValidationErrors());
       request.setAttribute("order", e.getOrder());

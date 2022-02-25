@@ -36,11 +36,15 @@ public class DefaultDosProtectService implements DosProtectService {
     }
   }
 
+  public Map<String, CountAndLastTime> getCountMap() {
+    return countMap;
+  }
+
   private boolean isExpired(CountAndLastTime countAndLastTime) {
     return LocalDateTime.now().minusMinutes(1).isAfter(countAndLastTime.lastTime);
   }
 
-  private static class CountAndLastTime {
+  protected static class CountAndLastTime {
     private long count;
     private LocalDateTime lastTime;
 
