@@ -2,6 +2,7 @@ package com.es.phoneshop.model.product;
 
 import com.es.phoneshop.model.GenericDao;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -46,6 +47,21 @@ public class ArrayListProductDao extends GenericDao<Product> implements ProductD
   }
 
   @Override
+  public List<Product> findProductsByAdvancedSearch(String productCode,
+                                                    BigDecimal minPrice,
+                                                    BigDecimal maxPrice,
+                                                    int minStock) {
+    getLock().readLock().lock();
+    try {
+      return getItems().stream()
+              .filter(getAdvancedFilterPredicate(productCode, minPrice, maxPrice, minStock))
+              .collect(Collectors.toList());
+    } finally {
+      getLock().readLock().unlock();
+    }
+  }
+
+  @Override
   public void delete(Long id) {
     getLock().writeLock().lock();
     try {
@@ -68,6 +84,20 @@ public class ArrayListProductDao extends GenericDao<Product> implements ProductD
             .anyMatch(keyWord -> product.getDescription().contains(keyWord));
 
     return notEmptyStockPredicate.and(notNullPricePredicate).and(containsAnyKeyWordPredicate);
+  }
+
+  private Predicate<Product> getAdvancedFilterPredicate(String productCode,
+                                                        BigDecimal minPrice,
+                                                        BigDecimal maxPrice,
+                                                        int minStock) {
+
+
+    Predicate<Product> productCodePredicate = product -> productCode.equals(product.getCode());
+    Predicate<Product> minPricePricePredicate = product -> product.getPrice().compareTo(minPrice) >= 0;
+    Predicate<Product> maxPricePredicate = product -> product.getPrice().compareTo(maxPrice) <= 0;
+    Predicate<Product> minStockPredicate = product -> product.getStock() > minStock;
+
+    return productCodePredicate.and(minPricePricePredicate).and(maxPricePredicate).and(minStockPredicate);
   }
 
   private Comparator<Product> getSortingComparator(String query, SortField sortField, SortOrder sortOrder) {
