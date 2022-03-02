@@ -113,6 +113,15 @@
     <url-pattern>/*</url-pattern>
   </filter-mapping>
 
+  <servlet>
+    <servlet-name>advancedSearch</servlet-name>
+    <servlet-class>com.es.phoneshop.web.AdvancedSearchPageServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>advancedSearch</servlet-name>
+    <url-pattern>/products/advanced-search</url-pattern>
+  </servlet-mapping>
+
   <error-page>
     <location>/WEB-INF/pages/error.jsp</location>
     <error-code>500</error-code>
