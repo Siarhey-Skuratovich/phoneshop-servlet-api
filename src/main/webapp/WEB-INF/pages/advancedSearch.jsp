@@ -11,44 +11,12 @@
         <td>Product code</td>
         <td><input name="productCode" value="${param['productCode']}"/></td>
       </tr>
-      <tr>
-        <td>Min price</td>
-        <c:set var="error" value="${validationErrors.get('minPrice')}"/>
-        <td><input name="minPrice" value="${param['minPrice']}"/>
-          <c:if test="${not empty error}">
-            <div class="error">
-                ${error}
-            </div>
-          </c:if>
-        </td>
-
-      </tr>
-      <tr>
-        <td>Max price</td>
-        <c:set var="error" value="${validationErrors.get('maxPrice')}"/>
-        <td><input name="maxPrice" value="${param['maxPrice']}"/>
-          <c:if test="${not empty error}">
-            <div class="error">
-                ${error}
-            </div>
-          </c:if>
-        </td>
-
-      </tr>
-      <tr>
-        <c:set var="error" value="${validationErrors.get('minStock')}"/>
-        <td>Min stock</td>
-        <td><input name="minStock" value="${param['minStock']}"/>
-          <c:if test="${not empty error}">
-            <div class="error">
-                ${error}
-            </div>
-          </c:if>
-        </td>
-      </tr>
+      <tags:advancedSearchFormRow name="minPrice" label="Min price" validationErrors="${validationErrors}"/>
+      <tags:advancedSearchFormRow name="maxPrice" label="Max price" validationErrors="${validationErrors}"/>
+      <tags:advancedSearchFormRow name="minStock" label="Min stock" validationErrors="${validationErrors}"/>
     </table>
     <p>
-    <button>Search</button>
+      <button>Search</button>
     </p>
   </form>
   <c:if test="${not empty param.successMessage}">
@@ -57,36 +25,37 @@
     </p>
   </c:if>
   <c:if test="${not empty products}">
-  <table>
-    <thead>
-    <tr>
-      <td>Image</td>
-      <td>
-        Description
-      </td>
-      <td class="price">
-        Price
-      </td>
-    </tr>
-    </thead>
-    <c:forEach var="product" items="${products}" varStatus="status">
+    <p class="success">Found ${products.size()} product(s)</p>
+    <table>
+      <thead>
       <tr>
+        <td>Image</td>
         <td>
-          <img class="product-tile"
-               src="https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/${product.imageUrl}">
-        </td>
-        <td>
-          <a href="${pageContext.servletContext.contextPath}/products/${product.id}">
-              ${product.description}
-          </a>
+          Description
         </td>
         <td class="price">
-          <a href="${pageContext.servletContext.contextPath}/products/price/${product.id}">
-            <fmt:formatNumber value="${product.price}" type="currency" currencySymbol="${product.currency.symbol}"/>
-          </a>
+          Price
         </td>
       </tr>
-    </c:forEach>
-  </table>
+      </thead>
+      <c:forEach var="product" items="${products}" varStatus="status">
+        <tr>
+          <td>
+            <img class="product-tile"
+                 src="https://raw.githubusercontent.com/andrewosipenko/phoneshop-ext-images/master/${product.imageUrl}">
+          </td>
+          <td>
+            <a href="${pageContext.servletContext.contextPath}/products/${product.id}">
+                ${product.description}
+            </a>
+          </td>
+          <td class="price">
+            <a href="${pageContext.servletContext.contextPath}/products/price/${product.id}">
+              <fmt:formatNumber value="${product.price}" type="currency" currencySymbol="${product.currency.symbol}"/>
+            </a>
+          </td>
+        </tr>
+      </c:forEach>
+    </table>
   </c:if>
 </tags:master>

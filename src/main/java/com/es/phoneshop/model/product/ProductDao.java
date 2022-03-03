@@ -9,7 +9,7 @@ public interface ProductDao {
 
   List<Product> findProducts(String query, SortField sortField, SortOrder sortOrder);
 
-  List<Product> findProductsByAdvancedSearch(String productCode, BigDecimal minPrice, BigDecimal maxPrice, int minStock);
+  List<Product> findProductsByAdvancedSearch(String productCode, BigDecimal minPrice, BigDecimal maxPrice, Integer minStock);
 
   void save(Product product);
 

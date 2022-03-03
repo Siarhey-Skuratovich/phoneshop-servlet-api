@@ -50,7 +50,7 @@ public class ArrayListProductDao extends GenericDao<Product> implements ProductD
   public List<Product> findProductsByAdvancedSearch(String productCode,
                                                     BigDecimal minPrice,
                                                     BigDecimal maxPrice,
-                                                    int minStock) {
+                                                    Integer minStock) {
     getLock().readLock().lock();
     try {
       return getItems().stream()
@@ -89,15 +89,25 @@ public class ArrayListProductDao extends GenericDao<Product> implements ProductD
   private Predicate<Product> getAdvancedFilterPredicate(String productCode,
                                                         BigDecimal minPrice,
                                                         BigDecimal maxPrice,
-                                                        int minStock) {
+                                                        Integer minStock) {
+    List<Predicate<Product>> allPredicates = new ArrayList<>();
+    if (productCode != null) {
+      allPredicates.add(product -> productCode.equals(product.getCode()));
+    }
 
+    if (minPrice != null) {
+      allPredicates.add(product -> product.getPrice().compareTo(minPrice) >= 0);
+    }
 
-    Predicate<Product> productCodePredicate = product -> productCode.equals(product.getCode());
-    Predicate<Product> minPricePricePredicate = product -> product.getPrice().compareTo(minPrice) >= 0;
-    Predicate<Product> maxPricePredicate = product -> product.getPrice().compareTo(maxPrice) <= 0;
-    Predicate<Product> minStockPredicate = product -> product.getStock() > minStock;
+    if (maxPrice != null) {
+      allPredicates.add(product -> product.getPrice().compareTo(maxPrice) <= 0);
+    }
 
-    return productCodePredicate.and(minPricePricePredicate).and(maxPricePredicate).and(minStockPredicate);
+    if (minStock != null) {
+      allPredicates.add(product -> product.getStock() >= minStock);
+    }
+
+    return allPredicates.stream().reduce(x -> true, Predicate::and);
   }
 
   private Comparator<Product> getSortingComparator(String query, SortField sortField, SortOrder sortOrder) {
