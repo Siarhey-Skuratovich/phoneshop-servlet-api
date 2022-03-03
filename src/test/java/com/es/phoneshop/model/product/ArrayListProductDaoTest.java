@@ -140,4 +140,62 @@ public class ArrayListProductDaoTest {
       assertTrue(sortedList.get(i - 1).getPrice().compareTo(sortedList.get(i).getPrice()) >= 0);
     }
   }
+
+  @Test
+  public void testFindProductsByAdvancedSearch() {
+    assertTrue(productDao.findProductsByAdvancedSearch("sgs",
+            BigDecimal.valueOf(100),
+            BigDecimal.valueOf(1000),
+            5)
+            .stream()
+            .allMatch(product -> product.getCode().equals("sgs")
+                    && product.getPrice().intValue() >= 100
+                    && product.getPrice().intValue() <= 1000
+                    && product.getStock() >= 5));
+  }
+
+  @Test
+  public void testFindProductsByAdvancedSearchWithEmptyProductCode() {
+    assertTrue(productDao.findProductsByAdvancedSearch(null,
+            BigDecimal.valueOf(300),
+            BigDecimal.valueOf(1000),
+            5)
+            .stream()
+            .allMatch(product -> product.getPrice().intValue() >= 300
+                    && product.getPrice().intValue() <= 1000
+                    && product.getStock() >= 5));
+  }
+
+  @Test
+  public void testFindProductsByAdvancedSearchWithNullMinValue() {
+    assertTrue(productDao.findProductsByAdvancedSearch(null,
+            null,
+            BigDecimal.valueOf(1000),
+            5)
+            .stream()
+            .allMatch(product -> product.getPrice().intValue() <= 1000
+                    && product.getStock() >= 5));
+  }
+
+  @Test
+  public void testFindProductsByAdvancedSearchWithNullMaxValue() {
+    assertTrue(productDao.findProductsByAdvancedSearch(null,
+            BigDecimal.valueOf(300),
+            null,
+            5)
+            .stream()
+            .allMatch(product -> product.getPrice().intValue() >= 300
+                    && product.getStock() >= 5));
+  }
+
+  @Test
+  public void testFindProductsByAdvancedSearchWithNullMinStock() {
+    assertTrue(productDao.findProductsByAdvancedSearch(null,
+            BigDecimal.valueOf(300),
+            BigDecimal.valueOf(1000),
+            null)
+            .stream()
+            .allMatch(product -> product.getPrice().intValue() >= 300
+                    && product.getPrice().intValue() <= 1000));
+  }
 }

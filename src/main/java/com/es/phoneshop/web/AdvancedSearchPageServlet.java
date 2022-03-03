@@ -1,8 +1,7 @@
 package com.es.phoneshop.web;
 
-import com.es.phoneshop.model.cart.CartService;
-import com.es.phoneshop.model.cart.DefaultCartService;
-import com.es.phoneshop.model.product.*;
+import com.es.phoneshop.model.product.ArrayListProductDao;
+import com.es.phoneshop.model.product.ProductDao;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -16,70 +15,91 @@ import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 public class AdvancedSearchPageServlet extends HttpServlet {
   private ProductDao productDao;
-  private CartService cartService;
 
   @Override
   public void init(ServletConfig config) throws ServletException {
     super.init(config);
     productDao = ArrayListProductDao.getInstance();
-    cartService = DefaultCartService.getInstance();
   }
 
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-    String productCodeString = request.getParameter("productCode");
-    String minPriceString = request.getParameter("minPrice");
-    String maxPriceString = request.getParameter("maxPrice");
-    String minStockString = request.getParameter("minStock");
+    if (containsNoRequiredParameters(request)) {
+      request.getRequestDispatcher("/WEB-INF/pages/advancedSearch.jsp").forward(request, response);
+      return;
+    }
 
-    if (searchFormIsNotEmpty(productCodeString, minPriceString, maxPriceString, minStockString)) {
-      Map<String, String> validationErrors = new HashMap<>();
+    Map<String, String> validationErrors = new HashMap<>();
 
-      BigDecimal minPrice = null;
-      if (isNotADigit(minPriceString)) {
-        validationErrors.put("minPrice", "Not a number");
-      } else {
-        minPrice = BigDecimal.valueOf(Integer.parseInt(minPriceString));
-      }
+    String productCode = retrieveProductCode(request);
+    BigDecimal minPrice = retrievePrice(request, "minPrice", validationErrors);
+    BigDecimal maxPrice = retrievePrice(request, "maxPrice", validationErrors);
+    Integer minStock = retrieveMinStock(request, validationErrors);
 
-      BigDecimal maxPrice = null;
-      if (isNotADigit(maxPriceString)) {
-        validationErrors.put("maxPrice", "Not a number");
-      } else {
-        maxPrice = BigDecimal.valueOf(Integer.parseInt(maxPriceString));
-      }
-
-      int minStock = 0;
-      if (isNotADigit(minStockString)) {
-        validationErrors.put("minStock", "Not a number");
-      } else {
-        minStock = Integer.parseInt(minStockString);
-        if (minStock < 0) {
-          validationErrors.put("minStock", "Must be positive");
-        }
-      }
-
-      if (validationErrors.isEmpty()) {
-        request.setAttribute("products",
-                productDao.findProductsByAdvancedSearch(productCodeString, minPrice, maxPrice, minStock));
-      } else {
-        request.setAttribute("validationErrors", validationErrors);
-      }
+    if (validationErrors.isEmpty()) {
+      request.setAttribute("products",
+              productDao.findProductsByAdvancedSearch(productCode, minPrice, maxPrice, minStock));
+    } else {
+      request.setAttribute("validationErrors", validationErrors);
     }
     request.getRequestDispatcher("/WEB-INF/pages/advancedSearch.jsp").forward(request, response);
   }
 
-  private boolean searchFormIsNotEmpty(String productCodeString,
-                                       String minPriceString,
-                                       String maxPriceString,
-                                       String minStockString) {
-    return productCodeString != null && minPriceString != null && maxPriceString != null && minStockString != null;
+  private boolean containsNoRequiredParameters(HttpServletRequest request) {
+    return request.getParameterMap().keySet().stream()
+            .noneMatch(parameter -> parameter.matches("productCode|minPrice|maxPrice|minStock"));
   }
 
-  private boolean isNotADigit(String string) {
-    return !string.matches("\\d+");
+  private String retrieveProductCode(HttpServletRequest request) {
+    String productCode = request.getParameter("productCode");
+    if (isEmptyOrNull(productCode)) {
+      return null;
+    }
+    return productCode;
+  }
+
+  private BigDecimal retrievePrice(HttpServletRequest request,
+                                   String priceParameter,
+                                   Map<String, String> validationErrors) {
+    String priceString = request.getParameter(priceParameter);
+    if (isEmptyOrNull(priceString)) {
+      return null;
+    }
+    try {
+      return BigDecimal.valueOf(parseNumberAccordingToLocale(priceString, request.getLocale()));
+    } catch (ParseException e) {
+      validationErrors.put(priceParameter, "Not a number");
+      return null;
+    }
+  }
+
+  private Integer retrieveMinStock(HttpServletRequest request, Map<String, String> validationErrors) {
+    String minStockString = request.getParameter("minStock");
+    if (isEmptyOrNull(minStockString)) {
+      return null;
+    }
+    try {
+      int minStock = parseNumberAccordingToLocale(minStockString, request.getLocale());
+      if (minStock < 0) {
+        validationErrors.put("minStock", "Must be positive");
+      }
+      return minStock;
+    } catch (ParseException e) {
+      validationErrors.put("minStock", "Not a number");
+      return null;
+    }
+  }
+
+  private boolean isEmptyOrNull(String string) {
+    return Optional.ofNullable(string).map(String::isEmpty).orElse(true);
+  }
+
+  private int parseNumberAccordingToLocale(String numberString, Locale locale) throws ParseException {
+    NumberFormat format = NumberFormat.getInstance(locale);
+    return format.parse(numberString).intValue();
   }
 }
